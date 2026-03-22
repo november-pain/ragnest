@@ -12,6 +12,9 @@ jobs:
   ci:
     name: CI checks
     uses: ./.github/workflows/ci.yml
+    permissions:
+      contents: read
+      security-events: write
 
   build:
     name: Build distribution
