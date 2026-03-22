@@ -67,7 +67,7 @@ ollama pull bge-m3
 ### 4. Add to Claude Code
 
 ```bash
-claude mcp add ragnest -- uvx ragnest-server
+claude mcp add ragnest -- uvx --from ragnest ragnest-server
 ```
 
 Database and schema are auto-initialized when the MCP server starts.

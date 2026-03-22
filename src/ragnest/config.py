@@ -68,15 +68,28 @@ class AppSettings(BaseSettings):
         return next(iter(self.databases.values()))
 
 
+def _resolve_config_path(config_path: str | None) -> Path:
+    """Find config file: explicit path > env var > ./config.yaml > ~/.ragnest/config.yaml."""
+    if config_path:
+        return Path(config_path)
+
+    from_env = os.environ.get("RAGNEST_CONFIG", "")
+    if from_env:
+        return Path(from_env)
+
+    candidates = [
+        Path.cwd() / "config.yaml",
+        Path.home() / ".ragnest" / "config.yaml",
+    ]
+    for candidate in candidates:
+        if candidate.exists():
+            return candidate
+    return candidates[1]
+
+
 def load_settings(config_path: str | None = None) -> AppSettings:
     """Load settings from YAML file with env var overrides."""
-    if config_path is None:
-        config_path = os.environ.get(
-            "RAGNEST_CONFIG",
-            str(Path(__file__).parent.parent.parent / "config.yaml"),
-        )
-
-    path = Path(config_path)
+    path = _resolve_config_path(config_path)
     if not path.exists():
         return AppSettings()
 
