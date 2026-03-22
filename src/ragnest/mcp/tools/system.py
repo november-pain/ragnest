@@ -20,8 +20,108 @@ if TYPE_CHECKING:
 logger = logging.getLogger(__name__)
 
 
+_HELP_TEXT = """\
+# Ragnest Configuration Reference
+
+## Config file locations (searched in order)
+1. `./config.yaml` (current working directory)
+2. `~/.ragnest/config.yaml` (user home)
+3. Override with env var: `RAGNEST_CONFIG=/path/to/config.yaml`
+
+## config.yaml
+
+```yaml
+database:
+  host: localhost       # PostgreSQL host
+  port: 5433            # PostgreSQL port
+  name: ragnest         # Database name
+
+ollama:
+  base_url: http://localhost:11434   # Ollama API URL (local or remote)
+
+defaults:
+  chunk_size: 1000      # Characters per chunk
+  chunk_overlap: 200    # Overlap between chunks
+  separator: "\\n\\n"    # Text split separator
+
+state:
+  path: ~/.ragnest/state.db   # SQLite state database path
+```
+
+## Secrets (.env file, same directory as config.yaml)
+
+```
+RAGNEST_DATABASE__USER=ragnest
+RAGNEST_DATABASE__PASSWORD=yourpassword
+```
+
+## Environment variable overrides
+
+All settings can be overridden via env vars with `RAGNEST_` prefix and `__` as separator:
+
+| Setting | Env var |
+|---------|---------|
+| Database host | `RAGNEST_DATABASE__HOST` |
+| Database port | `RAGNEST_DATABASE__PORT` |
+| Database name | `RAGNEST_DATABASE__NAME` |
+| Database user | `RAGNEST_DATABASE__USER` |
+| Database password | `RAGNEST_DATABASE__PASSWORD` |
+| Ollama URL | `RAGNEST_OLLAMA__BASE_URL` |
+| State DB path | `RAGNEST_STATE__PATH` |
+| Config file | `RAGNEST_CONFIG` |
+
+## Multiple database backends
+
+```yaml
+databases:
+  local:
+    host: localhost
+    port: 5433
+    name: ragnest
+  cloud:
+    host: xyz.supabase.co
+    port: 5432
+    name: postgres
+```
+
+Use `backend="cloud"` when creating a KB to route it to a specific database.
+
+## Installation
+
+```
+pip install ragnest
+claude mcp add ragnest -- uvx ragnest
+```
+
+## Worker commands
+
+```
+ragnest-worker --scan                 # Scan watch paths + process queue
+ragnest-worker --scan --kb <name>     # Specific KB only
+ragnest-worker --retry                # Retry failed files
+ragnest-worker --scan --dry-run       # Preview what would be queued
+```
+
+## Prerequisites
+
+- Python 3.12+
+- PostgreSQL with pgvector extension
+- Ollama for embeddings (local or remote)
+"""
+
+
 def register_system_tools(mcp: FastMCP, system_service: SystemService) -> None:
     """Register system information MCP tools."""
+
+    @mcp.tool
+    def ragnest_help() -> str:
+        """Show Ragnest configuration reference and usage guide.
+
+        Returns config file format, environment variables, installation
+        instructions, worker commands, and all available settings.
+        Call this when users ask how to configure ragnest.
+        """
+        return _HELP_TEXT
 
     @mcp.tool
     def db_status() -> str:

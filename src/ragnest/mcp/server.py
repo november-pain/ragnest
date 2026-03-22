@@ -24,20 +24,28 @@ if TYPE_CHECKING:
 logger = logging.getLogger(__name__)
 
 _INSTRUCTIONS = """\
-You have access to a local multi-knowledge-base RAG system.
-Always run list_kbs() early to see available KBs.
-Search before answering — use search_kb or search_all_kbs.
-Cite sources with filename and score. Flag weak matches (score < 0.3).
-Prefer watch paths over one-time ingestion for ongoing directories.
-Queued files are processed asynchronously by the background worker.
-Use list_models() to see available embedding models before creating a KB.
+You have access to Ragnest, a multi-knowledge-base RAG system.
 
-Dependencies (manage via CLI, not MCP):
+## Workflow
+- Run list_kbs() early to see available knowledge bases.
+- Search before answering — use search_kb or search_all_kbs.
+- Cite sources with filename and score. Flag weak matches (score < 0.3).
+- Prefer watch paths over one-time ingestion for ongoing directories.
+- Queued files are processed asynchronously by the background worker.
+- Use list_models() to discover available embedding models before creating a KB.
+
+## Configuration
+- Call ragnest_help() for full configuration reference (config file, env vars, all settings).
+- Config file: ~/.ragnest/config.yaml (or ./config.yaml, or RAGNEST_CONFIG env var).
+- Secrets: ~/.ragnest/.env (RAGNEST_DATABASE__USER, RAGNEST_DATABASE__PASSWORD).
+- Ollama URL is configurable — default http://localhost:11434, supports remote servers.
+- All settings can be overridden via env vars with RAGNEST_ prefix (e.g. RAGNEST_OLLAMA__BASE_URL).
+
+## Dependencies (manage via CLI, not MCP)
 - Ollama must be running for embeddings. Install: brew install ollama
 - Pull models via CLI: ollama pull <model_name>
-- Use list_models() to check available models, list_kbs() to see which models KBs need
-- Worker processes queued files: python -m ragnest.cli.worker --scan
-- Postgres runs via Docker: docker compose up -d in the ragnest project directory"""
+- Worker processes queued files: ragnest-worker --scan
+- PostgreSQL with pgvector required for vector storage."""
 
 
 def create_mcp_server(settings: AppSettings | None = None) -> FastMCP:
