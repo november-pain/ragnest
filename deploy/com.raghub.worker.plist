@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+    <key>Label</key>
+    <string>com.raghub.worker</string>
+
+    <key>ProgramArguments</key>
+    <array>
+        <string>/usr/bin/python3</string>
+        <string>-m</string>
+        <string>src.worker</string>
+        <string>--scan</string>
+    </array>
+
+    <key>WorkingDirectory</key>
+    <string>/path/to/rag-hub</string>
+
+    <key>EnvironmentVariables</key>
+    <dict>
+        <key>RAG_HUB_CONFIG</key>
+        <string>/path/to/rag-hub/config.yaml</string>
+    </dict>
+
+    <!-- Run every 15 minutes -->
+    <key>StartInterval</key>
+    <integer>900</integer>
+
+    <!-- Also run when loaded (catches up on missed work) -->
+    <key>RunAtLoad</key>
+    <true/>
+
+    <!-- Logging -->
+    <key>StandardOutPath</key>
+    <string>/tmp/rag-hub-worker.log</string>
+    <key>StandardErrorPath</key>
+    <string>/tmp/rag-hub-worker.err</string>
+
+    <!-- Don't run multiple instances simultaneously -->
+    <key>LegacyTimers</key>
+    <true/>
+</dict>
+</plist>

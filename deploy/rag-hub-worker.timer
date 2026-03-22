@@ -1,0 +1,13 @@
+[Unit]
+Description=RAG Hub Worker Timer — periodic scan and embedding
+
+[Timer]
+# Run every 15 minutes
+OnCalendar=*:0/15
+# Spread out start times to avoid thundering herd
+RandomizedDelaySec=60
+# Run immediately if a scheduled run was missed
+Persistent=true
+
+[Install]
+WantedBy=timers.target

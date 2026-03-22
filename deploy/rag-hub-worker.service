@@ -1,0 +1,26 @@
+[Unit]
+Description=RAG Hub Worker — background embedding processor
+After=network.target postgresql.service
+
+[Service]
+Type=oneshot
+# Scan watch paths for new files, then process the queue
+ExecStart=/usr/bin/python3 -m src.worker --scan
+WorkingDirectory=/path/to/rag-hub
+Environment=RAG_HUB_CONFIG=/path/to/rag-hub/config.yaml
+
+# Graceful shutdown: let current file finish
+TimeoutStopSec=300
+KillSignal=SIGTERM
+
+# Logging
+StandardOutput=journal
+StandardError=journal
+SyslogIdentifier=rag-hub-worker
+
+# Restart on failure
+Restart=on-failure
+RestartSec=60
+
+[Install]
+WantedBy=multi-user.target
