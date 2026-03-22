@@ -50,7 +50,7 @@ dev = [
 [project.scripts]
 ragnest-worker = "ragnest.cli.worker:main"
 ragnest-db = "ragnest.cli.db_setup:main"
-ragnest-server = "ragnest.mcp.server:main"
+ragnest = "ragnest.mcp.server:main"
 
 [project.urls]
 Homepage = "https://github.com/november-pain/ragnest"
