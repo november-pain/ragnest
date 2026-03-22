@@ -36,7 +36,7 @@ jobs:
       - name: mypy
         run: mypy src/
       - name: basedpyright
-        run: basedpyright --pythonpath $(which python) src/
+        run: basedpyright src/
 
   test:
     name: Test (Python ${{ matrix.python-version }})

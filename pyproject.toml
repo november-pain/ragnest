@@ -119,8 +119,6 @@ ignore_missing_imports = true
 pythonVersion = "3.12"
 typeCheckingMode = "strict"
 reportMissingTypeStubs = false
-venvPath = "."
-venv = ".venv"
 
 [tool.bandit]
 exclude_dirs = ["tests"]
