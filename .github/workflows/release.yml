@@ -32,25 +32,10 @@ jobs:
           name: dist
           path: dist/
 
-  publish-pypi:
-    name: Publish to PyPI
-    needs: [build]
-    runs-on: ubuntu-latest
-    environment:
-      name: pypi
-      url: https://pypi.org/p/ragnest
-    permissions:
-      id-token: write  # OIDC trusted publisher
-    steps:
-      - uses: actions/download-artifact@v8
-        with:
-          name: dist
-          path: dist/
-      - name: Publish to PyPI
-        uses: pypa/gh-action-pypi-publish@release/v1
-
+  # Pre-release tags (v0.1.0rc1, v0.1.0a1, v0.1.0b1) → TestPyPI
   publish-testpypi:
     name: Publish to TestPyPI
+    if: contains(github.ref_name, 'rc') || contains(github.ref_name, 'a') || contains(github.ref_name, 'b')
     needs: [build]
     runs-on: ubuntu-latest
     environment:
@@ -68,9 +53,28 @@ jobs:
         with:
           repository-url: https://test.pypi.org/legacy/
 
+  # Release tags (v0.1.0) → PyPI
+  publish-pypi:
+    name: Publish to PyPI
+    if: ${{ !contains(github.ref_name, 'rc') && !contains(github.ref_name, 'a') && !contains(github.ref_name, 'b') }}
+    needs: [build]
+    runs-on: ubuntu-latest
+    environment:
+      name: pypi
+      url: https://pypi.org/p/ragnest
+    permissions:
+      id-token: write
+    steps:
+      - uses: actions/download-artifact@v8
+        with:
+          name: dist
+          path: dist/
+      - name: Publish to PyPI
+        uses: pypa/gh-action-pypi-publish@release/v1
+
   github-release:
     name: GitHub Release
-    needs: [publish-pypi]
+    needs: [build]
     runs-on: ubuntu-latest
     permissions:
       contents: write
@@ -88,3 +92,4 @@ jobs:
           dist/*
           --title "${{ github.ref_name }}"
           --generate-notes
+          ${{ (contains(github.ref_name, 'rc') || contains(github.ref_name, 'a') || contains(github.ref_name, 'b')) && '--prerelease' || '' }}

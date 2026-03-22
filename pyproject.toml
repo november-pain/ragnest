@@ -1,6 +1,6 @@
 [project]
 name = "ragnest"
-version = "0.1.0"
+dynamic = ["version"]
 description = "Multi-knowledge-base RAG system with MCP integration"
 requires-python = ">=3.12"
 license = "MIT"
@@ -58,8 +58,11 @@ Repository = "https://github.com/november-pain/ragnest"
 Issues = "https://github.com/november-pain/ragnest/issues"
 
 [build-system]
-requires = ["hatchling"]
+requires = ["hatchling", "hatch-vcs"]
 build-backend = "hatchling.build"
+
+[tool.hatch.version]
+source = "vcs"
 
 [tool.hatch.build.targets.wheel]
 packages = ["src/ragnest"]
