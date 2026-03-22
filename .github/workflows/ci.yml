@@ -54,7 +54,7 @@ jobs:
         run: pytest --cov=ragnest --cov-report=xml -q
       - name: Upload coverage
         if: matrix.python-version == '3.12'
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: coverage-report
           path: coverage.xml
@@ -76,7 +76,7 @@ jobs:
         run: bandit -r src/ -c pyproject.toml
       - name: Upload Bandit report
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: bandit-report
           path: bandit-report.json
@@ -110,7 +110,7 @@ jobs:
       - name: Check package metadata
         run: pip install twine && twine check dist/*
       - name: Upload build artifacts
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: dist
           path: dist/
