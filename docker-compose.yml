@@ -1,0 +1,18 @@
+services:
+  database:
+    container_name: ragnest_postgres
+    image: pgvector/pgvector:pg18
+    environment:
+      POSTGRES_USER: ${RAGNEST_DATABASE__USER:-ragnest}
+      POSTGRES_PASSWORD: ${RAGNEST_DATABASE__PASSWORD}
+      POSTGRES_DB: ${RAGNEST_DATABASE__NAME:-ragnest}
+    volumes:
+      - ./pgdata:/var/lib/postgresql
+    ports:
+      - '5433:5432'
+    restart: unless-stopped
+    healthcheck:
+      test: pg_isready -U ragnest
+      interval: 10s
+      timeout: 5s
+      retries: 5
