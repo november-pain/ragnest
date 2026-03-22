@@ -110,7 +110,9 @@ class ChunkRepository(BaseRepository):
 
         logger.debug(
             "Inserted %d chunks for document %s in KB '%s'",
-            len(chunks), document_id, kb_name,
+            len(chunks),
+            document_id,
+            kb_name,
         )
         return len(chunks)
 
@@ -121,7 +123,7 @@ class ChunkRepository(BaseRepository):
                 "DELETE FROM chunks WHERE document_id = %s",
                 (document_id,),
             )
-            return cur.rowcount  # type: ignore[return-value]
+            return int(cur.rowcount)
 
     def delete_by_documents(self, document_ids: list[str]) -> int:
         """Delete all chunks belonging to multiple documents. Returns rows deleted."""
@@ -134,16 +136,14 @@ class ChunkRepository(BaseRepository):
                     "DELETE FROM chunks WHERE document_id = %s",
                     (doc_id,),
                 )
-                total += cur.rowcount  # type: ignore[operator]
+                total += int(cur.rowcount)
         return total
 
     def delete_by_kb(self, kb_name: str) -> int:
         """Delete all chunks in a knowledge base. Returns rows deleted."""
         with self._backend.cursor() as cur:
-            cur.execute(
-                "DELETE FROM chunks WHERE kb_name = %s", (kb_name,)
-            )
-            return cur.rowcount  # type: ignore[return-value]
+            cur.execute("DELETE FROM chunks WHERE kb_name = %s", (kb_name,))
+            return int(cur.rowcount)
 
     def count_by_kb(self, kb_name: str) -> int:
         """Count total chunks in a knowledge base."""

@@ -57,9 +57,7 @@ class WatchPathRepository(BaseRepository):
             msg = "Failed to insert/update watch path"
             raise RuntimeError(msg)
 
-        logger.info(
-            "Watch path added: '%s' -> KB '%s'", dir_path, kb_name
-        )
+        logger.info("Watch path added: '%s' -> KB '%s'", dir_path, kb_name)
         return WatchPathInfo(
             id=row[0],
             kb_name=row[1],
@@ -74,15 +72,12 @@ class WatchPathRepository(BaseRepository):
         """Remove a watch path. Returns True if it existed."""
         with self._backend.cursor() as cur:
             cur.execute(
-                "DELETE FROM watch_paths "
-                "WHERE kb_name = %s AND dir_path = %s",
+                "DELETE FROM watch_paths WHERE kb_name = %s AND dir_path = %s",
                 (kb_name, dir_path),
             )
-            return cur.rowcount > 0  # type: ignore[return-value]
+            return bool(cur.rowcount > 0)
 
-    def list_all(
-        self, kb_name: str | None = None
-    ) -> list[WatchPathInfo]:
+    def list_all(self, kb_name: str | None = None) -> list[WatchPathInfo]:
         """List watch paths, optionally filtered by KB."""
         with self._backend.cursor() as cur:
             if kb_name is not None:
@@ -113,24 +108,20 @@ class WatchPathRepository(BaseRepository):
             for r in rows
         ]
 
-    def set_enabled(
-        self, kb_name: str, dir_path: str, enabled: bool
-    ) -> bool:
+    def set_enabled(self, kb_name: str, dir_path: str, enabled: bool) -> bool:
         """Enable or disable a watch path. Returns True if it existed."""
         with self._backend.cursor() as cur:
             cur.execute(
-                "UPDATE watch_paths SET enabled = %s "
-                "WHERE kb_name = %s AND dir_path = %s",
+                "UPDATE watch_paths SET enabled = %s WHERE kb_name = %s AND dir_path = %s",
                 (enabled, kb_name, dir_path),
             )
-            return cur.rowcount > 0  # type: ignore[return-value]
+            return bool(cur.rowcount > 0)
 
     def update_last_scanned(self, watch_path_id: int) -> None:
         """Update the last_scanned_at timestamp."""
         with self._backend.cursor() as cur:
             cur.execute(
-                "UPDATE watch_paths SET last_scanned_at = datetime('now') "
-                "WHERE id = %s",
+                "UPDATE watch_paths SET last_scanned_at = datetime('now') WHERE id = %s",
                 (watch_path_id,),
             )
 

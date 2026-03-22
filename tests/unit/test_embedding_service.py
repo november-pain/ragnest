@@ -89,7 +89,8 @@ class TestEmbedBatch:
         ]
 
         results = provider.embed_batch(
-            [f"text_{i}" for i in range(total_items)], batch_size=batch_size,
+            [f"text_{i}" for i in range(total_items)],
+            batch_size=batch_size,
         )
 
         assert len(results) == total_items
@@ -125,7 +126,8 @@ class TestEmbedQuery:
 
         assert result == embedding
         mock_ollama_client.embed.assert_called_once_with(
-            model="bge-m3", input=["test query"],
+            model="bge-m3",
+            input=["test query"],
         )
 
 
@@ -193,7 +195,8 @@ class TestEmbeddingServiceFactory:
 
     @patch("ragnest.services.embedding_service.ollama.Client")
     def test_get_provider_returns_provider(
-        self, mock_client_cls: MagicMock,  # noqa: ARG002
+        self,
+        mock_client_cls: MagicMock,  # noqa: ARG002
     ) -> None:
         service = EmbeddingService("http://localhost:11434")
 
@@ -203,7 +206,8 @@ class TestEmbeddingServiceFactory:
 
     @patch("ragnest.services.embedding_service.ollama.Client")
     def test_get_provider_caches(
-        self, mock_client_cls: MagicMock,  # noqa: ARG002
+        self,
+        mock_client_cls: MagicMock,  # noqa: ARG002
     ) -> None:
         service = EmbeddingService("http://localhost:11434")
 
@@ -214,7 +218,8 @@ class TestEmbeddingServiceFactory:
 
     @patch("ragnest.services.embedding_service.ollama.Client")
     def test_get_provider_different_models(
-        self, mock_client_cls: MagicMock,  # noqa: ARG002
+        self,
+        mock_client_cls: MagicMock,  # noqa: ARG002
     ) -> None:
         service = EmbeddingService("http://localhost:11434")
 
@@ -225,7 +230,8 @@ class TestEmbeddingServiceFactory:
 
     @patch("ragnest.services.embedding_service.ollama.Client")
     def test_list_models_returns_names(
-        self, mock_client_cls: MagicMock,
+        self,
+        mock_client_cls: MagicMock,
     ) -> None:
         mock_client = mock_client_cls.return_value
         mock_client.list.return_value = SimpleNamespace(
@@ -242,7 +248,8 @@ class TestEmbeddingServiceFactory:
 
     @patch("ragnest.services.embedding_service.ollama.Client")
     def test_list_models_returns_empty_on_error(
-        self, mock_client_cls: MagicMock,
+        self,
+        mock_client_cls: MagicMock,
     ) -> None:
         mock_client = mock_client_cls.return_value
         mock_client.list.side_effect = ollama.ResponseError("unavailable")

@@ -30,9 +30,7 @@ def format_search_results(results: list[SearchResult]) -> str:
     lines: list[str] = [f"Found {len(results)} result(s):\n"]
     for i, r in enumerate(results, 1):
         score_label = (
-            "weak" if r.score < _SCORE_WEAK
-            else "good" if r.score < _SCORE_GOOD
-            else "strong"
+            "weak" if r.score < _SCORE_WEAK else "good" if r.score < _SCORE_GOOD else "strong"
         )
         preview = r.content[:_CONTENT_PREVIEW_LEN]
         ellipsis = "..." if len(r.content) > _CONTENT_PREVIEW_LEN else ""
@@ -157,9 +155,7 @@ def format_worker_status(status: WorkerStatus) -> str:
     state = "processing" if status.is_processing else "idle"
     last_run = status.last_run_at.isoformat() if status.last_run_at else "never"
     lines: list[str] = [
-        f"**Worker Status:** {state}\n"
-        f"Queue depth: {status.queue_depth}\n"
-        f"Last run: {last_run}",
+        f"**Worker Status:** {state}\nQueue depth: {status.queue_depth}\nLast run: {last_run}",
     ]
     if status.current_kb:
         lines.append(f"Current KB: {status.current_kb}")
@@ -179,10 +175,7 @@ def format_db_status(status: DBStatus) -> str:
     ]
     if status.table_sizes:
         lines.append("\nTable row counts:")
-        lines.extend(
-            f"  {table}: {count}"
-            for table, count in sorted(status.table_sizes.items())
-        )
+        lines.extend(f"  {table}: {count}" for table, count in sorted(status.table_sizes.items()))
     return "\n".join(lines)
 
 

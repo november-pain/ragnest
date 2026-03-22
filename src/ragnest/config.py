@@ -54,9 +54,7 @@ class StateSettings(BaseModel):
 class AppSettings(BaseSettings):
     """Top-level application settings with env var override support."""
 
-    databases: dict[str, DBSettings] = Field(
-        default_factory=lambda: {"default": DBSettings()}
-    )
+    databases: dict[str, DBSettings] = Field(default_factory=lambda: {"default": DBSettings()})
     ollama: OllamaSettings = Field(default_factory=OllamaSettings)
     defaults: DefaultsSettings = Field(default_factory=DefaultsSettings)
     knowledge_bases: dict[str, KBConfig] = Field(default_factory=dict)
@@ -103,15 +101,9 @@ def load_settings(config_path: str | None = None) -> AppSettings:
             description=kb_raw.get("description", ""),
             model=kb_raw.get("model", "bge-m3"),
             dimensions=kb_raw.get("dimensions", 1024),
-            chunk_size=kb_raw.get(
-                "chunk_size", defaults_raw.get("chunk_size", 1000)
-            ),
-            chunk_overlap=kb_raw.get(
-                "chunk_overlap", defaults_raw.get("chunk_overlap", 200)
-            ),
-            separator=kb_raw.get(
-                "separator", defaults_raw.get("separator", "\n\n")
-            ),
+            chunk_size=kb_raw.get("chunk_size", defaults_raw.get("chunk_size", 1000)),
+            chunk_overlap=kb_raw.get("chunk_overlap", defaults_raw.get("chunk_overlap", 200)),
+            separator=kb_raw.get("separator", defaults_raw.get("separator", "\n\n")),
         )
 
     # Build databases dict: support both singular and plural config keys

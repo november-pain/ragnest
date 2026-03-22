@@ -93,7 +93,7 @@ class Application:
         self.settings = settings
 
         # Local state (SQLite)
-        self.state_backend: SQLiteBackend = create_state_backend(settings.state)  # type: ignore[type-annotation]
+        self.state_backend: SQLiteBackend = create_state_backend(settings.state)
         init_sqlite_schema(self.state_backend)
 
         # Vector backends (per-KB routing)

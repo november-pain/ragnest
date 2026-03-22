@@ -57,7 +57,7 @@ class SystemService:
                     "ingestion_queue",
                     "watch_paths",
                 ):
-                    cur.execute(f"SELECT COUNT(*) FROM {table}")
+                    cur.execute(f"SELECT COUNT(*) FROM {table}")  # nosec B608
                     trow = cur.fetchone()
                     table_sizes[table] = int(trow[0]) if trow else 0
 

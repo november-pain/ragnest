@@ -49,10 +49,7 @@ def register_system_tools(mcp: FastMCP, system_service: SystemService) -> None:
             raise ToolError(str(e)) from e
         else:
             if not models:
-                return (
-                    "No embedding models found. "
-                    "Is Ollama running? Try: ollama pull bge-m3"
-                )
+                return "No embedding models found. Is Ollama running? Try: ollama pull bge-m3"
             lines = [f"**{len(models)} available model(s):**\n"]
             lines.extend(f"- {m}" for m in models)
             return "\n".join(lines)

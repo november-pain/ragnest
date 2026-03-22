@@ -40,9 +40,7 @@ def register_export_tools(mcp: FastMCP, export_service: ExportService) -> None:
         try:
             file_path = export_service.export_kb(kb_name, output_dir, fmt=fmt)
         except KBNotFoundError as e:
-            raise ToolError(
-                f"KB '{e.kb_name}' not found. Use list_kbs() to see available."
-            ) from e
+            raise ToolError(f"KB '{e.kb_name}' not found. Use list_kbs() to see available.") from e
         except RagnestError as e:
             raise ToolError(str(e)) from e
         else:

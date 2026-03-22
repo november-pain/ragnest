@@ -5,7 +5,7 @@
 from __future__ import annotations
 
 import logging
-from typing import TYPE_CHECKING, Annotated
+from typing import TYPE_CHECKING, Annotated, Literal
 
 from fastmcp.exceptions import ToolError
 from pydantic import Field
@@ -52,18 +52,12 @@ def register_kb_tools(mcp: FastMCP, kb_service: KBService) -> None:
             str,
             Field(description="Embedding model (e.g. 'bge-m3' or 'gte-qwen2:7b')"),
         ],
-        description: Annotated[
-            str, Field(description="Human-readable description")
-        ] = "",
+        description: Annotated[str, Field(description="Human-readable description")] = "",
         dimensions: Annotated[
             int, Field(description="Embedding dimensions (must match model)")
         ] = 1024,
-        chunk_size: Annotated[
-            int, Field(description="Characters per chunk")
-        ] = 1000,
-        chunk_overlap: Annotated[
-            int, Field(description="Overlap between chunks")
-        ] = 200,
+        chunk_size: Annotated[int, Field(description="Characters per chunk")] = 1000,
+        chunk_overlap: Annotated[int, Field(description="Overlap between chunks")] = 200,
         backend: Annotated[
             str,
             Field(description="Database backend name (default: 'default')"),
@@ -84,6 +78,9 @@ def register_kb_tools(mcp: FastMCP, kb_service: KBService) -> None:
         Use the 'backend' parameter to select which database backend to use.
         Set 'external=True' for shared/remote KBs that don't need watch paths.
         """
+        if mode not in ("read_write", "read_only"):
+            raise ToolError(f"Invalid mode: {mode!r}. Must be 'read_write' or 'read_only'.")
+        kb_mode: Literal["read_write", "read_only"] = mode  # type: ignore[assignment]
         try:
             config = KBConfig(
                 name=name,
@@ -94,13 +91,11 @@ def register_kb_tools(mcp: FastMCP, kb_service: KBService) -> None:
                 chunk_overlap=chunk_overlap,
                 backend=backend,
                 external=external,
-                mode=mode,  # type: ignore[arg-type]
+                mode=kb_mode,
             )
             kb = kb_service.create_kb(config)
         except KBAlreadyExistsError as e:
-            raise ToolError(
-                f"KB '{e.kb_name}' already exists. Use update_kb() to modify."
-            ) from e
+            raise ToolError(f"KB '{e.kb_name}' already exists. Use update_kb() to modify.") from e
         except RagnestError as e:
             raise ToolError(str(e)) from e
         else:
@@ -132,9 +127,7 @@ def register_kb_tools(mcp: FastMCP, kb_service: KBService) -> None:
                 chunk_overlap=chunk_overlap,
             )
         except KBNotFoundError as e:
-            raise ToolError(
-                f"KB '{e.kb_name}' not found. Use list_kbs() to see available."
-            ) from e
+            raise ToolError(f"KB '{e.kb_name}' not found. Use list_kbs() to see available.") from e
         except RagnestError as e:
             raise ToolError(str(e)) from e
         else:
@@ -152,9 +145,7 @@ def register_kb_tools(mcp: FastMCP, kb_service: KBService) -> None:
         try:
             kb_service.delete_kb(kb_name)
         except KBNotFoundError as e:
-            raise ToolError(
-                f"KB '{e.kb_name}' not found. Use list_kbs() to see available."
-            ) from e
+            raise ToolError(f"KB '{e.kb_name}' not found. Use list_kbs() to see available.") from e
         except RagnestError as e:
             raise ToolError(str(e)) from e
         else:
@@ -174,18 +165,10 @@ def register_kb_tools(mcp: FastMCP, kb_service: KBService) -> None:
             str,
             Field(description="Embedding model (e.g. 'bge-m3')"),
         ],
-        description: Annotated[
-            str, Field(description="Human-readable description")
-        ] = "",
-        dimensions: Annotated[
-            int, Field(description="Embedding dimensions")
-        ] = 1024,
-        chunk_size: Annotated[
-            int, Field(description="Characters per chunk")
-        ] = 1000,
-        chunk_overlap: Annotated[
-            int, Field(description="Overlap between chunks")
-        ] = 200,
+        description: Annotated[str, Field(description="Human-readable description")] = "",
+        dimensions: Annotated[int, Field(description="Embedding dimensions")] = 1024,
+        chunk_size: Annotated[int, Field(description="Characters per chunk")] = 1000,
+        chunk_overlap: Annotated[int, Field(description="Overlap between chunks")] = 200,
         backend: Annotated[
             str,
             Field(description="Database backend name (default: 'default')"),
@@ -218,9 +201,7 @@ def register_kb_tools(mcp: FastMCP, kb_service: KBService) -> None:
                 file_patterns=file_patterns,
             )
         except KBAlreadyExistsError as e:
-            raise ToolError(
-                f"KB '{e.kb_name}' already exists. Use update_kb() to modify."
-            ) from e
+            raise ToolError(f"KB '{e.kb_name}' already exists. Use update_kb() to modify.") from e
         except RagnestError as e:
             raise ToolError(str(e)) from e
         else:

@@ -26,9 +26,7 @@ class QueueRepository(BaseRepository):
     def __init__(self, backend: DatabaseBackend) -> None:
         super().__init__(backend)
 
-    def enqueue_file(
-        self, kb_name: str, file_path: str, batch_id: str
-    ) -> bool:
+    def enqueue_file(self, kb_name: str, file_path: str, batch_id: str) -> bool:
         """Add a single file to the ingestion queue.
 
         Skips if the file is already pending/processing for this KB.
@@ -45,9 +43,7 @@ class QueueRepository(BaseRepository):
                 return False
 
             cur.execute(
-                "INSERT INTO ingestion_queue "
-                "(kb_name, file_path, batch_id) "
-                "VALUES (%s, %s, %s)",
+                "INSERT INTO ingestion_queue (kb_name, file_path, batch_id) VALUES (%s, %s, %s)",
                 (kb_name, file_path, batch_id),
             )
         return True
@@ -67,11 +63,7 @@ class QueueRepository(BaseRepository):
         files = sorted(f for f in path.glob(glob_pattern) if f.is_file())
 
         if patterns != ["*"]:
-            files = [
-                f
-                for f in files
-                if any(fnmatch.fnmatch(f.name, p) for p in patterns)
-            ]
+            files = [f for f in files if any(fnmatch.fnmatch(f.name, p) for p in patterns)]
 
         queued = 0
         with self._backend.cursor() as cur:
@@ -100,13 +92,14 @@ class QueueRepository(BaseRepository):
 
         logger.info(
             "Queued %d files from '%s' for KB '%s' (batch %s)",
-            queued, dir_path, kb_name, batch_id,
+            queued,
+            dir_path,
+            kb_name,
+            batch_id,
         )
         return queued
 
-    def claim_next(
-        self, kb_name: str | None = None
-    ) -> QueueItemRow | None:
+    def claim_next(self, kb_name: str | None = None) -> QueueItemRow | None:
         """Claim the next pending queue item.
 
         SQLite does not support ``FOR UPDATE SKIP LOCKED``, so we use a
@@ -195,9 +188,7 @@ class QueueRepository(BaseRepository):
                 (reason, queue_id),
             )
 
-    def get_pending_count(
-        self, kb_name: str | None = None
-    ) -> int:
+    def get_pending_count(self, kb_name: str | None = None) -> int:
         """Count pending items, optionally filtered by KB."""
         with self._backend.cursor() as cur:
             if kb_name is not None:
@@ -207,16 +198,11 @@ class QueueRepository(BaseRepository):
                     (kb_name,),
                 )
             else:
-                cur.execute(
-                    "SELECT COUNT(*) FROM ingestion_queue "
-                    "WHERE status = 'pending'"
-                )
+                cur.execute("SELECT COUNT(*) FROM ingestion_queue WHERE status = 'pending'")
             row = cur.fetchone()
         return int(row[0]) if row else 0
 
-    def get_failed(
-        self, kb_name: str | None = None
-    ) -> list[QueueItemRow]:
+    def get_failed(self, kb_name: str | None = None) -> list[QueueItemRow]:
         """List all failed queue items, optionally filtered by KB."""
         with self._backend.cursor() as cur:
             if kb_name is not None:
@@ -254,9 +240,7 @@ class QueueRepository(BaseRepository):
             for r in rows
         ]
 
-    def reset_failed(
-        self, kb_name: str | None = None
-    ) -> int:
+    def reset_failed(self, kb_name: str | None = None) -> int:
         """Reset all failed items back to pending. Returns count reset."""
         with self._backend.cursor() as cur:
             if kb_name is not None:
@@ -274,6 +258,6 @@ class QueueRepository(BaseRepository):
                     "started_at = NULL, completed_at = NULL "
                     "WHERE status = 'failed'"
                 )
-            count: int = cur.rowcount  # type: ignore[assignment]
+            count: int = int(cur.rowcount)
         logger.info("Reset %d failed queue items to pending", count)
         return count

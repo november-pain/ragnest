@@ -12,13 +12,35 @@ logger = logging.getLogger(__name__)
 
 SUPPORTED_EXTENSIONS: set[str] = {
     # Text / markup
-    ".txt", ".md", ".html", ".htm", ".xml", ".csv",
+    ".txt",
+    ".md",
+    ".html",
+    ".htm",
+    ".xml",
+    ".csv",
     # Data / config
-    ".json", ".yaml", ".yml", ".toml", ".ini",
+    ".json",
+    ".yaml",
+    ".yml",
+    ".toml",
+    ".ini",
     # Code
-    ".py", ".js", ".ts", ".rs", ".go", ".java",
-    ".c", ".cpp", ".h", ".sql", ".sh", ".rb",
-    ".jsx", ".tsx", ".vue", ".svelte",
+    ".py",
+    ".js",
+    ".ts",
+    ".rs",
+    ".go",
+    ".java",
+    ".c",
+    ".cpp",
+    ".h",
+    ".sql",
+    ".sh",
+    ".rb",
+    ".jsx",
+    ".tsx",
+    ".vue",
+    ".svelte",
     # Logs
     ".log",
     # PDF
@@ -39,9 +61,7 @@ def read_pdf(path: Path) -> str:
     try:
         import fitz  # noqa: PLC0415  # pyright: ignore[reportMissingImports]
     except ImportError as exc:
-        raise FileReadError(
-            str(path), "pymupdf not installed — cannot read PDFs"
-        ) from exc
+        raise FileReadError(str(path), "pymupdf not installed — cannot read PDFs") from exc
 
     try:
         doc = fitz.open(str(path))  # pyright: ignore[reportUnknownMemberType]
@@ -76,9 +96,7 @@ def read_file(path: Path) -> str:
     except FileReadError:
         raise
     except Exception as exc:
-        raise FileReadError(
-            str(path), f"Unsupported or unreadable file: {exc}"
-        ) from exc
+        raise FileReadError(str(path), f"Unsupported or unreadable file: {exc}") from exc
 
 
 def list_supported_formats() -> list[str]:

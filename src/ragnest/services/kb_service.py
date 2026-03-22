@@ -114,7 +114,7 @@ class KBService:
             chunk_count=row.chunk_count,
             backend=row.backend,
             external=row.external,
-            mode=mode,  # type: ignore[arg-type]
+            mode=mode,
         )
 
     def _backend_for_kb(self, kb_name: str) -> str:
@@ -168,9 +168,7 @@ class KBService:
         provider = self._embedding_service.get_provider(kb.model)
         query_embedding = provider.embed_query(query)
         chunk_repo = self._chunk_repo(backend_name)
-        results = chunk_repo.search(
-            kb_name, query_embedding, kb.dimensions, top_k=top_k
-        )
+        results = chunk_repo.search(kb_name, query_embedding, kb.dimensions, top_k=top_k)
         if threshold is not None:
             results = [r for r in results if r.score >= threshold]
         return results
@@ -186,9 +184,7 @@ class KBService:
         all_results: dict[str, list[SearchResult]] = {}
         for kb in kbs:
             if kb.chunk_count > 0:
-                results = self.search(
-                    kb.name, query, top_k=top_k_per_kb, threshold=threshold
-                )
+                results = self.search(kb.name, query, top_k=top_k_per_kb, threshold=threshold)
                 if results:
                     all_results[kb.name] = results
         return all_results
@@ -277,9 +273,7 @@ class KBService:
             vector_backend = self._registry.get(backend_name)
             index_name = sql.Identifier(f"idx_chunks_{kb_name}_embedding")
             with vector_backend.cursor() as cur:
-                cur.execute(
-                    sql.SQL("DROP INDEX IF EXISTS {}").format(index_name)
-                )
+                cur.execute(sql.SQL("DROP INDEX IF EXISTS {}").format(index_name))
         except Exception:
             logger.warning("Could not drop vector index for KB '%s'", kb_name)
 
@@ -298,17 +292,19 @@ class KBService:
         results: list[KBStats] = []
         for r in kb_repo.list_all():
             mode = r.mode if r.mode in ("read_write", "read_only") else "read_write"
-            results.append(KBStats(
-                name=r.name,
-                description=r.description or "",
-                model=r.model,
-                dimensions=r.dimensions,
-                document_count=r.document_count,
-                chunk_count=r.chunk_count,
-                backend=r.backend,
-                external=r.external,
-                mode=mode,  # type: ignore[arg-type]
-            ))
+            results.append(
+                KBStats(
+                    name=r.name,
+                    description=r.description or "",
+                    model=r.model,
+                    dimensions=r.dimensions,
+                    document_count=r.document_count,
+                    chunk_count=r.chunk_count,
+                    backend=r.backend,
+                    external=r.external,
+                    mode=mode,
+                )
+            )
         return results
 
     def init_kb(
@@ -346,9 +342,7 @@ class KBService:
 
         kb = self.create_kb(config)
         self.add_watch_path(name, folder_path, file_patterns=file_patterns)
-        logger.info(
-            "Initialized KB '%s' with watch path '%s'", name, folder_path
-        )
+        logger.info("Initialized KB '%s' with watch path '%s'", name, folder_path)
         return kb
 
     # ── Watch Paths ─────────────────────────────────────────────
@@ -380,9 +374,7 @@ class KBService:
         watch_path_repo = self._watch_path_repo()
         watch_path_repo.remove(kb_name, dir_path)
 
-    def list_watch_paths(
-        self, kb_name: str | None = None
-    ) -> list[WatchPathInfo]:
+    def list_watch_paths(self, kb_name: str | None = None) -> list[WatchPathInfo]:
         """List watch paths, optionally filtered by KB."""
         if kb_name is not None:
             self._find_kb(kb_name)  # ensure exists
@@ -486,8 +478,11 @@ class KBService:
         ]
         chunk_repo = self._chunk_repo(backend_name)
         count = chunk_repo.add_batch(
-            kb_name, doc_id, chunk_dicts,
-            filename=filename, source_path=source_path,
+            kb_name,
+            doc_id,
+            chunk_dicts,
+            filename=filename,
+            source_path=source_path,
         )
 
         # Update document chunk count in state

@@ -26,16 +26,12 @@ class BatchRepository(BaseRepository):
     def __init__(self, backend: DatabaseBackend) -> None:
         super().__init__(backend)
 
-    def create(
-        self, kb_name: str, description: str | None = None
-    ) -> str:
+    def create(self, kb_name: str, description: str | None = None) -> str:
         """Create a new batch and return its id."""
         batch_id = str(uuid.uuid4())[:12]
         with self._backend.cursor() as cur:
             cur.execute(
-                "INSERT INTO batches "
-                "(id, kb_name, description, status) "
-                "VALUES (%s, %s, %s, %s)",
+                "INSERT INTO batches (id, kb_name, description, status) VALUES (%s, %s, %s, %s)",
                 (batch_id, kb_name, description, BatchStatus.PENDING),
             )
         logger.info("Created batch %s for KB '%s'", batch_id, kb_name)
@@ -65,14 +61,11 @@ class BatchRepository(BaseRepository):
                 "WHERE batch_id = %s AND status = 'failed'",
                 (batch_id,),
             )
-            failed = [
-                {"file": r[0], "error": r[1] or ""} for r in cur.fetchall()
-            ]
+            failed = [{"file": r[0], "error": r[1] or ""} for r in cur.fetchall()]
 
             # Pending count
             cur.execute(
-                "SELECT COUNT(*) FROM ingestion_queue "
-                "WHERE batch_id = %s AND status = 'pending'",
+                "SELECT COUNT(*) FROM ingestion_queue WHERE batch_id = %s AND status = 'pending'",
                 (batch_id,),
             )
             pending_row = cur.fetchone()
@@ -104,9 +97,7 @@ class BatchRepository(BaseRepository):
             row = cur.fetchone()
         return row[0] if row else None
 
-    def list_by_kb(
-        self, kb_name: str, limit: int = 20
-    ) -> list[BatchInfo]:
+    def list_by_kb(self, kb_name: str, limit: int = 20) -> list[BatchInfo]:
         """List recent batches for a knowledge base."""
         with self._backend.cursor() as cur:
             cur.execute(
@@ -171,8 +162,7 @@ class BatchRepository(BaseRepository):
 
             # Mark batch as undone
             cur.execute(
-                "UPDATE batches SET status = %s, completed_at = datetime('now') "
-                "WHERE id = %s",
+                "UPDATE batches SET status = %s, completed_at = datetime('now') WHERE id = %s",
                 (BatchStatus.UNDONE, batch_id),
             )
 
@@ -212,7 +202,7 @@ class BatchRepository(BaseRepository):
             return
 
         params.append(batch_id)
-        query = f"UPDATE batches SET {', '.join(sets)} WHERE id = %s"
+        query = f"UPDATE batches SET {', '.join(sets)} WHERE id = %s"  # nosec B608
         with self._backend.cursor() as cur:
             cur.execute(query, params)
 
@@ -220,8 +210,7 @@ class BatchRepository(BaseRepository):
         """Mark a batch as completed with a timestamp."""
         with self._backend.cursor() as cur:
             cur.execute(
-                "UPDATE batches SET status = %s, completed_at = datetime('now') "
-                "WHERE id = %s",
+                "UPDATE batches SET status = %s, completed_at = datetime('now') WHERE id = %s",
                 (BatchStatus.COMPLETED, batch_id),
             )
         logger.info("Batch %s completed", batch_id)
@@ -230,7 +219,6 @@ class BatchRepository(BaseRepository):
         """Mark a batch as running (best-effort, only if still pending)."""
         with self._backend.cursor() as cur:
             cur.execute(
-                "UPDATE batches SET status = %s "
-                "WHERE id = %s AND status = %s",
+                "UPDATE batches SET status = %s WHERE id = %s AND status = %s",
                 (BatchStatus.RUNNING, batch_id, BatchStatus.PENDING),
             )

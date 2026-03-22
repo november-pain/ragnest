@@ -21,9 +21,7 @@ class EmbeddingProvider(ABC):
     """
 
     @abstractmethod
-    def embed_batch(
-        self, texts: list[str], batch_size: int = 32
-    ) -> list[list[float]]:
+    def embed_batch(self, texts: list[str], batch_size: int = 32) -> list[list[float]]:
         """Embed a list of texts. Implementations should handle internal batching."""
         ...
 
@@ -57,26 +55,17 @@ class OllamaEmbeddingProvider(EmbeddingProvider):
                 msg = f"Failed to pull model '{self._model}': {exc}"
                 raise EmbeddingError(msg) from exc
 
-    def embed_batch(
-        self, texts: list[str], batch_size: int = 32
-    ) -> list[list[float]]:
+    def embed_batch(self, texts: list[str], batch_size: int = 32) -> list[list[float]]:
         """Embed texts in batches to limit memory usage."""
         self.ensure_model()
         results: list[list[float]] = []
         for i in range(0, len(texts), batch_size):
             batch = texts[i : i + batch_size]
             try:
-                response = self._client.embed(
-                    model=self._model, input=batch
-                )
-                results.extend(
-                    [list(seq) for seq in response.embeddings]
-                )
+                response = self._client.embed(model=self._model, input=batch)
+                results.extend([list(seq) for seq in response.embeddings])
             except (ollama.ResponseError, KeyError) as exc:
-                msg = (
-                    f"Embedding failed for model '{self._model}' "
-                    f"(batch {i // batch_size}): {exc}"
-                )
+                msg = f"Embedding failed for model '{self._model}' (batch {i // batch_size}): {exc}"
                 raise EmbeddingError(msg) from exc
         return results
 
@@ -84,9 +73,7 @@ class OllamaEmbeddingProvider(EmbeddingProvider):
         """Embed a single query string."""
         self.ensure_model()
         try:
-            response = self._client.embed(
-                model=self._model, input=[query]
-            )
+            response = self._client.embed(model=self._model, input=[query])
             return list(response.embeddings[0])
         except (ollama.ResponseError, KeyError, IndexError) as exc:
             msg = f"Query embedding failed for model '{self._model}': {exc}"
@@ -111,9 +98,7 @@ class EmbeddingService:
     def get_provider(self, model: str) -> EmbeddingProvider:
         """Return a cached provider for *model*, creating one if needed."""
         if model not in self._providers:
-            self._providers[model] = OllamaEmbeddingProvider(
-                self._base_url, model
-            )
+            self._providers[model] = OllamaEmbeddingProvider(self._base_url, model)
         return self._providers[model]
 
     def list_models(self) -> list[str]:

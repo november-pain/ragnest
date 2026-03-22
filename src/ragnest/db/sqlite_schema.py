@@ -116,26 +116,15 @@ def init_sqlite_schema(backend: SQLiteBackend) -> None:
         cur.execute(STATE_SCHEMA_SQL)
 
         # Migration: add external column if missing
-        cur.execute(
-            "SELECT 1 FROM pragma_table_info('knowledge_bases') "
-            "WHERE name = 'external'"
-        )
+        cur.execute("SELECT 1 FROM pragma_table_info('knowledge_bases') WHERE name = 'external'")
         if not cur.fetchone():
-            cur.execute(
-                "ALTER TABLE knowledge_bases ADD COLUMN external INTEGER DEFAULT 0"
-            )
+            cur.execute("ALTER TABLE knowledge_bases ADD COLUMN external INTEGER DEFAULT 0")
             logger.info("Migrated: added external column to knowledge_bases")
 
         # Migration: add mode column if missing
-        cur.execute(
-            "SELECT 1 FROM pragma_table_info('knowledge_bases') "
-            "WHERE name = 'mode'"
-        )
+        cur.execute("SELECT 1 FROM pragma_table_info('knowledge_bases') WHERE name = 'mode'")
         if not cur.fetchone():
-            cur.execute(
-                "ALTER TABLE knowledge_bases "
-                "ADD COLUMN mode TEXT DEFAULT 'read_write'"
-            )
+            cur.execute("ALTER TABLE knowledge_bases ADD COLUMN mode TEXT DEFAULT 'read_write'")
             logger.info("Migrated: added mode column to knowledge_bases")
 
     logger.info("SQLite state schema initialized")

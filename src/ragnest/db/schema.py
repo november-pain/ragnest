@@ -152,16 +152,10 @@ def create_database_if_not_exists(settings: DBSettings) -> None:
                 (settings.name,),
             )
             if not cur.fetchone():
-                cur.execute(
-                    sql.SQL("CREATE DATABASE {}").format(
-                        sql.Identifier(settings.name)
-                    )
-                )
+                cur.execute(sql.SQL("CREATE DATABASE {}").format(sql.Identifier(settings.name)))
                 logger.info("Created database: %s", settings.name)
             else:
-                logger.info(
-                    "Database already exists: %s", settings.name
-                )
+                logger.info("Database already exists: %s", settings.name)
     finally:
         conn.close()
 
@@ -209,10 +203,7 @@ def init_schema(backend: DatabaseBackend) -> None:
             "WHERE table_name = 'knowledge_bases' AND column_name = 'index_type'"
         )
         if not cur.fetchone():
-            cur.execute(
-                "ALTER TABLE knowledge_bases "
-                "ADD COLUMN index_type TEXT DEFAULT 'hnsw'"
-            )
+            cur.execute("ALTER TABLE knowledge_bases ADD COLUMN index_type TEXT DEFAULT 'hnsw'")
             logger.info("Migrated: added index_type column")
 
         # Migration: add backend column if missing (existing DBs)
@@ -221,10 +212,7 @@ def init_schema(backend: DatabaseBackend) -> None:
             "WHERE table_name = 'knowledge_bases' AND column_name = 'backend'"
         )
         if not cur.fetchone():
-            cur.execute(
-                "ALTER TABLE knowledge_bases "
-                "ADD COLUMN backend TEXT DEFAULT 'default'"
-            )
+            cur.execute("ALTER TABLE knowledge_bases ADD COLUMN backend TEXT DEFAULT 'default'")
             logger.info("Migrated: added backend column")
 
         # Migration: add filename/source_path to chunks if missing
@@ -291,6 +279,4 @@ def create_vector_index(
 
     with backend.cursor() as cur:
         cur.execute(query)
-    logger.info(
-        "Created %s index for KB '%s' (%dd)", index_type.upper(), kb_name, dimensions
-    )
+    logger.info("Created %s index for KB '%s' (%dd)", index_type.upper(), kb_name, dimensions)

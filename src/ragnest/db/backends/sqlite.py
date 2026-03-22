@@ -95,13 +95,13 @@ class _SQLiteCursorWrapper:
         return self
 
     def fetchone(self) -> tuple[Any, ...] | None:
-        return self._cursor.fetchone()  # type: ignore[return-value]
+        return self._cursor.fetchone()  # type: ignore[no-any-return]
 
     def fetchall(self) -> list[tuple[Any, ...]]:
-        return self._cursor.fetchall()  # type: ignore[return-value]
+        return self._cursor.fetchall()
 
     def fetchmany(self, size: int = 1) -> list[tuple[Any, ...]]:
-        return self._cursor.fetchmany(size)  # type: ignore[return-value]
+        return self._cursor.fetchmany(size)
 
     def close(self) -> None:
         self._cursor.close()
@@ -145,7 +145,7 @@ class SQLiteBackend:
                 raise
 
     @contextmanager
-    def cursor(self) -> Generator[_SQLiteCursorWrapper, None, None]:  # type: ignore[override]
+    def cursor(self) -> Generator[_SQLiteCursorWrapper, None, None]:
         """Yield a cursor-wrapper within a managed connection."""
         with self.connection() as conn:
             raw = conn.cursor()

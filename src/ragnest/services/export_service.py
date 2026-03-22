@@ -66,19 +66,18 @@ class ExportService:
         data: list[dict[str, Any]] = []
         for row in rows:
             embedding_text: str = row[4]
-            embedding = [
-                float(x)
-                for x in embedding_text.strip("[]").split(",")
-            ]
-            data.append({
-                "chunk_id": row[0],
-                "content": row[1],
-                "chunk_index": row[2],
-                "metadata": str(row[3]),
-                "embedding": embedding,
-                "filename": row[5],
-                "source_path": row[6],
-            })
+            embedding = [float(x) for x in embedding_text.strip("[]").split(",")]
+            data.append(
+                {
+                    "chunk_id": row[0],
+                    "content": row[1],
+                    "chunk_index": row[2],
+                    "metadata": str(row[3]),
+                    "embedding": embedding,
+                    "filename": row[5],
+                    "source_path": row[6],
+                }
+            )
 
         output_path = Path(output_dir)
         output_path.mkdir(parents=True, exist_ok=True)
@@ -107,13 +106,12 @@ class ExportService:
 
         logger.info(
             "Exported %d chunks to %s",
-            len(data), file_path,
+            len(data),
+            file_path,
         )
         return str(file_path)
 
-    def _write_parquet(
-        self, output_path: Path, kb_name: str, data: list[dict[str, Any]]
-    ) -> Path:
+    def _write_parquet(self, output_path: Path, kb_name: str, data: list[dict[str, Any]]) -> Path:
         """Write data as Parquet — lazy-imports pandas/pyarrow."""
         import pandas as pd  # noqa: PLC0415  # pyright: ignore[reportMissingImports]
 
@@ -122,9 +120,7 @@ class ExportService:
         df.to_parquet(str(file_path), index=False)  # pyright: ignore[reportUnknownMemberType]
         return file_path
 
-    def _write_json(
-        self, output_path: Path, kb_name: str, data: list[dict[str, Any]]
-    ) -> Path:
+    def _write_json(self, output_path: Path, kb_name: str, data: list[dict[str, Any]]) -> Path:
         """Write data as JSON — lazy-imports pandas."""
         import pandas as pd  # noqa: PLC0415  # pyright: ignore[reportMissingImports]
 

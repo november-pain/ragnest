@@ -57,8 +57,11 @@ class KBRepository(BaseRepository):
 
         logger.info(
             "Created KB '%s' (model=%s, dim=%d, external=%s, mode=%s)",
-            config.name, config.model, config.dimensions,
-            config.external, config.mode,
+            config.name,
+            config.model,
+            config.dimensions,
+            config.external,
+            config.mode,
         )
         return True
 
@@ -93,8 +96,7 @@ class KBRepository(BaseRepository):
         """Fetch a single knowledge base by name."""
         with self._backend.cursor() as cur:
             cur.execute(
-                f"SELECT {self._SELECT_COLS} "
-                "FROM knowledge_bases WHERE name = %s",
+                f"SELECT {self._SELECT_COLS} FROM knowledge_bases WHERE name = %s",  # nosec B608
                 (name,),
             )
             row = cur.fetchone()
@@ -105,10 +107,7 @@ class KBRepository(BaseRepository):
     def list_all(self) -> list[KBRow]:
         """List all knowledge bases ordered by name."""
         with self._backend.cursor() as cur:
-            cur.execute(
-                f"SELECT {self._SELECT_COLS} "
-                "FROM knowledge_bases ORDER BY name"
-            )
+            cur.execute(f"SELECT {self._SELECT_COLS} FROM knowledge_bases ORDER BY name")  # nosec B608
             rows = cur.fetchall()
         return [self._row_to_model(r) for r in rows]
 
@@ -116,22 +115,12 @@ class KBRepository(BaseRepository):
         """Delete a KB and all associated state data. Returns True if deleted."""
         with self._backend.cursor() as cur:
             # Delete child rows explicitly for clarity
-            cur.execute(
-                "DELETE FROM ingestion_queue WHERE kb_name = %s", (name,)
-            )
-            cur.execute(
-                "DELETE FROM documents WHERE kb_name = %s", (name,)
-            )
-            cur.execute(
-                "DELETE FROM batches WHERE kb_name = %s", (name,)
-            )
-            cur.execute(
-                "DELETE FROM watch_paths WHERE kb_name = %s", (name,)
-            )
-            cur.execute(
-                "DELETE FROM knowledge_bases WHERE name = %s", (name,)
-            )
-            deleted = cur.rowcount > 0
+            cur.execute("DELETE FROM ingestion_queue WHERE kb_name = %s", (name,))
+            cur.execute("DELETE FROM documents WHERE kb_name = %s", (name,))
+            cur.execute("DELETE FROM batches WHERE kb_name = %s", (name,))
+            cur.execute("DELETE FROM watch_paths WHERE kb_name = %s", (name,))
+            cur.execute("DELETE FROM knowledge_bases WHERE name = %s", (name,))
+            deleted = bool(cur.rowcount > 0)
 
         if deleted:
             logger.info("Deleted KB '%s' from state", name)
@@ -162,10 +151,10 @@ class KBRepository(BaseRepository):
             return False
 
         params.append(name)
-        query = f"UPDATE knowledge_bases SET {', '.join(sets)} WHERE name = %s"
+        query = f"UPDATE knowledge_bases SET {', '.join(sets)} WHERE name = %s"  # nosec B608
         with self._backend.cursor() as cur:
             cur.execute(query, params)
-            updated = cur.rowcount > 0
+            updated = bool(cur.rowcount > 0)
         if updated:
             logger.info("Updated KB '%s'", name)
         return updated
@@ -191,6 +180,6 @@ class KBRepository(BaseRepository):
             return
 
         params.append(name)
-        query = f"UPDATE knowledge_bases SET {', '.join(sets)} WHERE name = %s"
+        query = f"UPDATE knowledge_bases SET {', '.join(sets)} WHERE name = %s"  # nosec B608
         with self._backend.cursor() as cur:
             cur.execute(query, params)

@@ -130,8 +130,12 @@ class TestKBServiceSearch:
 
         expected_results = [
             SearchResult(
-                content="result", score=0.9, document_id="d1",
-                filename="f.md", kb_name="test_kb", chunk_index=0,
+                content="result",
+                score=0.9,
+                document_id="d1",
+                filename="f.md",
+                kb_name="test_kb",
+                chunk_index=0,
             ),
         ]
         repos["chunk"].search.return_value = expected_results
@@ -156,12 +160,20 @@ class TestKBServiceSearch:
 
         repos["chunk"].search.return_value = [
             SearchResult(
-                content="high", score=0.9, document_id="d1",
-                filename="f.md", kb_name="test_kb", chunk_index=0,
+                content="high",
+                score=0.9,
+                document_id="d1",
+                filename="f.md",
+                kb_name="test_kb",
+                chunk_index=0,
             ),
             SearchResult(
-                content="low", score=0.2, document_id="d2",
-                filename="g.md", kb_name="test_kb", chunk_index=0,
+                content="low",
+                score=0.2,
+                document_id="d2",
+                filename="g.md",
+                kb_name="test_kb",
+                chunk_index=0,
             ),
         ]
 
@@ -381,9 +393,14 @@ class TestKBServiceWatchPaths:
 
         # Create an external KB
         kb_repo = KBRepository(in_memory_state)
-        kb_repo.create(KBConfig(
-            name="ext_kb", model="bge-m3", dimensions=1024, external=True,
-        ))
+        kb_repo.create(
+            KBConfig(
+                name="ext_kb",
+                model="bge-m3",
+                dimensions=1024,
+                external=True,
+            )
+        )
 
         with pytest.raises(RagnestError, match="external"):
             kb_service.add_watch_path("ext_kb", "/data")
@@ -464,10 +481,15 @@ class TestExternalKBRestrictions:
 
         # Create an external read-only KB
         kb_repo = KBRepository(in_memory_state)
-        kb_repo.create(KBConfig(
-            name="readonly_kb", model="bge-m3", dimensions=1024,
-            external=True, mode="read_only",
-        ))
+        kb_repo.create(
+            KBConfig(
+                name="readonly_kb",
+                model="bge-m3",
+                dimensions=1024,
+                external=True,
+                mode="read_only",
+            )
+        )
 
         with pytest.raises(RagnestError, match="read-only"):
             kb_service.add_chunks("readonly_kb", "doc-1", ["chunk text"])
@@ -481,10 +503,15 @@ class TestExternalKBRestrictions:
 
         # Create an external read-write KB
         kb_repo = KBRepository(in_memory_state)
-        kb_repo.create(KBConfig(
-            name="rw_ext_kb", model="bge-m3", dimensions=1024,
-            external=True, mode="read_write",
-        ))
+        kb_repo.create(
+            KBConfig(
+                name="rw_ext_kb",
+                model="bge-m3",
+                dimensions=1024,
+                external=True,
+                mode="read_write",
+            )
+        )
 
         # Create a document in state
         doc_repo = DocumentRepository(in_memory_state)
@@ -494,7 +521,9 @@ class TestExternalKBRestrictions:
         repos["chunk"].count_by_kb.return_value = 1
 
         result = kb_service.add_chunks(
-            "rw_ext_kb", doc_id, ["chunk text"],
+            "rw_ext_kb",
+            doc_id,
+            ["chunk text"],
             filename="test.txt",
         )
 
@@ -508,10 +537,15 @@ class TestExternalKBRestrictions:
         kb_service, _repos = kb_service_with_mocks
 
         kb_repo = KBRepository(in_memory_state)
-        kb_repo.create(KBConfig(
-            name="ext_kb", model="bge-m3", dimensions=1024,
-            external=True, mode="read_write",
-        ))
+        kb_repo.create(
+            KBConfig(
+                name="ext_kb",
+                model="bge-m3",
+                dimensions=1024,
+                external=True,
+                mode="read_write",
+            )
+        )
 
         with pytest.raises(RagnestError, match="external"):
             kb_service.add_watch_path("ext_kb", "/data")

@@ -40,7 +40,9 @@ def _register_knowledge_bases(
             if created:
                 logger.info(
                     "Registered KB: %s (model=%s, dim=%d)",
-                    kb_name, kb_config.model, kb_config.dimensions,
+                    kb_name,
+                    kb_config.model,
+                    kb_config.dimensions,
                 )
             else:
                 # Update existing KB settings
@@ -107,9 +109,7 @@ def main() -> None:
         finally:
             backend.close()
     else:
-        logger.info(
-            "No knowledge bases configured — skipping KB registration"
-        )
+        logger.info("No knowledge bases configured — skipping KB registration")
 
     logger.info("Database setup complete!")
 

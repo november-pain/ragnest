@@ -52,18 +52,16 @@ class IngestService:
         queue_repo = self._queue_repo()
         batch_repo = self._batch_repo()
 
-        batch_id = batch_repo.create(
-            kb_name, description=f"File: {path.name}"
-        )
-        queued = queue_repo.enqueue_file(
-            kb_name, str(path.absolute()), batch_id
-        )
+        batch_id = batch_repo.create(kb_name, description=f"File: {path.name}")
+        queued = queue_repo.enqueue_file(kb_name, str(path.absolute()), batch_id)
         total = 1 if queued else 0
         batch_repo.update_stats(batch_id, total_files=total)
 
         logger.info(
             "Queued file '%s' for KB '%s' (batch %s)",
-            path.name, kb_name, batch_id,
+            path.name,
+            kb_name,
+            batch_id,
         )
         return BatchInfo(
             id=batch_id,
@@ -95,17 +93,21 @@ class IngestService:
         queue_repo = self._queue_repo()
         batch_repo = self._batch_repo()
 
-        batch_id = batch_repo.create(
-            kb_name, description=f"Directory: {dir_path}"
-        )
+        batch_id = batch_repo.create(kb_name, description=f"Directory: {dir_path}")
         queued = queue_repo.enqueue_directory(
-            kb_name, dir_path, batch_id,
-            recursive=recursive, file_patterns=file_patterns,
+            kb_name,
+            dir_path,
+            batch_id,
+            recursive=recursive,
+            file_patterns=file_patterns,
         )
 
         logger.info(
             "Queued %d files from '%s' for KB '%s' (batch %s)",
-            queued, dir_path, kb_name, batch_id,
+            queued,
+            dir_path,
+            kb_name,
+            batch_id,
         )
         return BatchInfo(
             id=batch_id,
@@ -136,17 +138,16 @@ class IngestService:
         queue_repo = self._queue_repo()
         batch_repo = self._batch_repo()
 
-        batch_id = batch_repo.create(
-            kb_name, description=f"Text: {source_name}"
-        )
-        queue_repo.enqueue_file(
-            kb_name, str(tmp_file), batch_id
-        )
+        batch_id = batch_repo.create(kb_name, description=f"Text: {source_name}")
+        queue_repo.enqueue_file(kb_name, str(tmp_file), batch_id)
         batch_repo.update_stats(batch_id, total_files=1)
 
         logger.info(
             "Queued text '%s' for KB '%s' (batch %s, temp=%s)",
-            source_name, kb_name, batch_id, tmp_file,
+            source_name,
+            kb_name,
+            batch_id,
+            tmp_file,
         )
         return BatchInfo(
             id=batch_id,

@@ -69,29 +69,41 @@ class TestKBConfigChunkValidation:
 
     def test_valid_overlap_less_than_size(self) -> None:
         config = KBConfig(
-            name="kb", model="bge-m3", dimensions=1024,
-            chunk_size=1000, chunk_overlap=200,
+            name="kb",
+            model="bge-m3",
+            dimensions=1024,
+            chunk_size=1000,
+            chunk_overlap=200,
         )
         assert config.chunk_overlap < config.chunk_size
 
     def test_rejects_overlap_equal_to_size(self) -> None:
         with pytest.raises(ValidationError, match="chunk_overlap must be less than chunk_size"):
             KBConfig(
-                name="kb", model="bge-m3", dimensions=1024,
-                chunk_size=500, chunk_overlap=500,
+                name="kb",
+                model="bge-m3",
+                dimensions=1024,
+                chunk_size=500,
+                chunk_overlap=500,
             )
 
     def test_rejects_overlap_greater_than_size(self) -> None:
         with pytest.raises(ValidationError, match="chunk_overlap must be less than chunk_size"):
             KBConfig(
-                name="kb", model="bge-m3", dimensions=1024,
-                chunk_size=500, chunk_overlap=600,
+                name="kb",
+                model="bge-m3",
+                dimensions=1024,
+                chunk_size=500,
+                chunk_overlap=600,
             )
 
     def test_zero_overlap_is_valid(self) -> None:
         config = KBConfig(
-            name="kb", model="bge-m3", dimensions=1024,
-            chunk_size=500, chunk_overlap=0,
+            name="kb",
+            model="bge-m3",
+            dimensions=1024,
+            chunk_size=500,
+            chunk_overlap=0,
         )
         assert config.chunk_overlap == 0
 
@@ -269,8 +281,11 @@ class TestWorkerStatsConstruction:
 
     def test_explicit_values(self) -> None:
         stats = WorkerStats(
-            processed=10, failed=2, skipped=1,
-            total_chunks=80, duration_seconds=12.5,
+            processed=10,
+            failed=2,
+            skipped=1,
+            total_chunks=80,
+            duration_seconds=12.5,
         )
         expected_processed = 10
         expected_duration = 12.5
@@ -291,7 +306,9 @@ class TestWorkerStatusConstruction:
     def test_with_active_state(self) -> None:
         expected_depth = 5
         status = WorkerStatus(
-            queue_depth=expected_depth, is_processing=True, current_kb="my_kb",
+            queue_depth=expected_depth,
+            is_processing=True,
+            current_kb="my_kb",
         )
         assert status.queue_depth == expected_depth
         assert status.current_kb == "my_kb"

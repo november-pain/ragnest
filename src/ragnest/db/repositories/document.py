@@ -146,9 +146,7 @@ class DocumentRepository(BaseRepository):
             if row is None:
                 return False
 
-            cur.execute(
-                "DELETE FROM documents WHERE id = %s", (document_id,)
-            )
+            cur.execute("DELETE FROM documents WHERE id = %s", (document_id,))
 
         logger.info("Deleted document %s from state", document_id)
         return True
@@ -180,11 +178,9 @@ class DocumentRepository(BaseRepository):
                 "DELETE FROM documents WHERE batch_id = %s",
                 (batch_id,),
             )
-            return cur.rowcount  # type: ignore[return-value]
+            return int(cur.rowcount)
 
-    def find_by_hash(
-        self, kb_name: str, content_hash: str
-    ) -> DocumentRow | None:
+    def find_by_hash(self, kb_name: str, content_hash: str) -> DocumentRow | None:
         """Find a document by content hash within a KB."""
         with self._backend.cursor() as cur:
             cur.execute(
@@ -213,9 +209,7 @@ class DocumentRepository(BaseRepository):
             batch_id=row[11],
         )
 
-    def find_by_path(
-        self, kb_name: str, source_path: str
-    ) -> DocumentRow | None:
+    def find_by_path(self, kb_name: str, source_path: str) -> DocumentRow | None:
         """Find a document by source path within a KB."""
         with self._backend.cursor() as cur:
             cur.execute(

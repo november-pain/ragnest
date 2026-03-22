@@ -39,9 +39,7 @@ def register_document_tools(mcp: FastMCP, kb_service: KBService) -> None:
         try:
             docs = kb_service.list_documents(kb_name)
         except KBNotFoundError as e:
-            raise ToolError(
-                f"KB '{e.kb_name}' not found. Use list_kbs() to see available."
-            ) from e
+            raise ToolError(f"KB '{e.kb_name}' not found. Use list_kbs() to see available.") from e
         except RagnestError as e:
             raise ToolError(str(e)) from e
         else:

@@ -127,10 +127,7 @@ class WorkerService:
         doc_repo = self._doc_repo()
 
         if kb_name is not None:
-            watch_paths = [
-                wp for wp in watch_path_repo.get_active()
-                if wp.kb_name == kb_name
-            ]
+            watch_paths = [wp for wp in watch_path_repo.get_active() if wp.kb_name == kb_name]
         else:
             watch_paths = watch_path_repo.get_active()
 
@@ -139,7 +136,8 @@ class WorkerService:
             if not new_files:
                 logger.info(
                     "Watch path '%s' -> KB '%s': no new files",
-                    wp.dir_path, wp.kb_name,
+                    wp.dir_path,
+                    wp.kb_name,
                 )
                 continue
 
@@ -169,10 +167,7 @@ class WorkerService:
 
         # Filter by patterns
         if patterns != ["*"]:
-            files = [
-                f for f in files
-                if any(fnmatch.fnmatch(f.name, p) for p in patterns)
-            ]
+            files = [f for f in files if any(fnmatch.fnmatch(f.name, p) for p in patterns)]
 
         new_files: list[str] = []
         for f in files:
@@ -199,14 +194,14 @@ class WorkerService:
         """Log what would be queued in dry-run mode."""
         logger.info(
             "Watch path '%s' -> KB '%s': would queue %d files",
-            wp.dir_path, wp.kb_name, len(new_files),
+            wp.dir_path,
+            wp.kb_name,
+            len(new_files),
         )
         for fpath in new_files[:_DRY_RUN_PREVIEW_LIMIT]:
             logger.info("  %s", fpath)
         if len(new_files) > _DRY_RUN_PREVIEW_LIMIT:
-            logger.info(
-                "  ... and %d more", len(new_files) - _DRY_RUN_PREVIEW_LIMIT
-            )
+            logger.info("  ... and %d more", len(new_files) - _DRY_RUN_PREVIEW_LIMIT)
 
     def _queue_new_files(
         self,
@@ -218,9 +213,7 @@ class WorkerService:
         queue_repo = self._queue_repo()
         watch_path_repo = self._watch_path_repo()
 
-        batch_id = batch_repo.create(
-            wp.kb_name, description=f"Auto-scan: {wp.dir_path}"
-        )
+        batch_id = batch_repo.create(wp.kb_name, description=f"Auto-scan: {wp.dir_path}")
         batch_repo.update_stats(batch_id, total_files=len(new_files))
 
         for fpath in new_files:
@@ -230,15 +223,16 @@ class WorkerService:
 
         logger.info(
             "Watch path '%s' -> KB '%s': queued %d files (batch %s)",
-            wp.dir_path, wp.kb_name, len(new_files), batch_id,
+            wp.dir_path,
+            wp.kb_name,
+            len(new_files),
+            batch_id,
         )
         return len(new_files)
 
     # ── Queue Processor ─────────────────────────────────────────
 
-    def process_queue(
-        self, kb_name: str | None = None
-    ) -> WorkerStats:
+    def process_queue(self, kb_name: str | None = None) -> WorkerStats:
         """Process all pending files in the ingestion queue.
 
         Per-file commits for resilience. Returns processing statistics.
@@ -261,7 +255,11 @@ class WorkerService:
 
                 batch_repo.mark_running(item.batch_id)
                 self._process_single_item(
-                    item, stats, queue_repo, batch_repo, doc_repo,
+                    item,
+                    stats,
+                    queue_repo,
+                    batch_repo,
+                    doc_repo,
                 )
 
             # Finalize completed batches
@@ -293,9 +291,7 @@ class WorkerService:
             logger.info("Processing: %s -> %s", file_path.name, item.kb_name)
 
             if not file_path.exists():
-                queue_repo.mark_failed(
-                    item.id, f"File not found: {item.source_path}"
-                )
+                queue_repo.mark_failed(item.id, f"File not found: {item.source_path}")
                 batch_repo.update_stats(item.batch_id, failed_files=1)
                 stats.failed += 1
                 return
@@ -319,9 +315,7 @@ class WorkerService:
                 return
 
             # Remove old version if file was modified
-            old_doc = doc_repo.find_by_path(
-                item.kb_name, item.source_path
-            )
+            old_doc = doc_repo.find_by_path(item.kb_name, item.source_path)
             if old_doc is not None:
                 self._kb_service.delete_document(old_doc.id)
                 logger.info("  Replacing old version of %s", file_path.name)
@@ -330,9 +324,7 @@ class WorkerService:
             kb_repo = self._kb_repo()
             kb_row = kb_repo.get(item.kb_name)
             chunk_size = (
-                kb_row.chunk_size
-                if kb_row is not None
-                else self._settings.defaults.chunk_size
+                kb_row.chunk_size if kb_row is not None else self._settings.defaults.chunk_size
             )
             chunk_overlap = (
                 kb_row.chunk_overlap
@@ -368,7 +360,9 @@ class WorkerService:
 
             # Embed and store chunks (writes to vector backend)
             num_chunks = self._kb_service.add_chunks(
-                item.kb_name, doc_id, chunks,
+                item.kb_name,
+                doc_id,
+                chunks,
                 filename=file_path.name,
                 source_path=item.source_path,
             )
@@ -439,8 +433,7 @@ class WorkerService:
 
         worker_stats = self.process_queue(kb_name)
         logger.info(
-            "Worker done: %d processed, %d failed, %d skipped, "
-            "%d chunks total (%.1fs)",
+            "Worker done: %d processed, %d failed, %d skipped, %d chunks total (%.1fs)",
             worker_stats.processed,
             worker_stats.failed,
             worker_stats.skipped,
@@ -449,6 +442,4 @@ class WorkerService:
         )
 
         if self._shutdown.is_set():
-            logger.info(
-                "Shutdown was requested — remaining items stay in queue"
-            )
+            logger.info("Shutdown was requested — remaining items stay in queue")

@@ -28,9 +28,7 @@ def register_watch_path_tools(mcp: FastMCP, kb_service: KBService) -> None:
     def add_watch_path(
         kb_name: Annotated[str, Field(description="Knowledge base name")],
         dir_path: Annotated[str, Field(description="Directory path to watch")],
-        recursive: Annotated[
-            bool, Field(description="Watch subdirectories")
-        ] = True,
+        recursive: Annotated[bool, Field(description="Watch subdirectories")] = True,
         file_patterns: Annotated[
             str,
             Field(description="Comma-separated file patterns (e.g. '*.md,*.txt')"),
@@ -46,9 +44,7 @@ def register_watch_path_tools(mcp: FastMCP, kb_service: KBService) -> None:
                 kb_name, dir_path, recursive=recursive, file_patterns=file_patterns
             )
         except KBNotFoundError as e:
-            raise ToolError(
-                f"KB '{e.kb_name}' not found. Use list_kbs() to see available."
-            ) from e
+            raise ToolError(f"KB '{e.kb_name}' not found. Use list_kbs() to see available.") from e
         except RagnestError as e:
             raise ToolError(str(e)) from e
         else:

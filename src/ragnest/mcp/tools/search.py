@@ -45,13 +45,9 @@ def register_search_tools(mcp: FastMCP, kb_service: KBService) -> None:
         Scores below 0.3 indicate weak matches.
         """
         try:
-            results = kb_service.search(
-                kb_name, query, top_k=top_k, threshold=threshold
-            )
+            results = kb_service.search(kb_name, query, top_k=top_k, threshold=threshold)
         except KBNotFoundError as e:
-            raise ToolError(
-                f"KB '{e.kb_name}' not found. Use list_kbs() to see available."
-            ) from e
+            raise ToolError(f"KB '{e.kb_name}' not found. Use list_kbs() to see available.") from e
         except EmbeddingError as e:
             raise ToolError(f"Embedding error: {e}. Is Ollama running?") from e
         except RagnestError as e:
@@ -101,17 +97,11 @@ def register_search_tools(mcp: FastMCP, kb_service: KBService) -> None:
         Useful for discovering related content or finding duplicates.
         """
         try:
-            results = kb_service.get_similar_documents(
-                kb_name, document_id, top_k=top_k
-            )
+            results = kb_service.get_similar_documents(kb_name, document_id, top_k=top_k)
         except KBNotFoundError as e:
-            raise ToolError(
-                f"KB '{e.kb_name}' not found. Use list_kbs() to see available."
-            ) from e
+            raise ToolError(f"KB '{e.kb_name}' not found. Use list_kbs() to see available.") from e
         except DocumentNotFoundError as e:
-            raise ToolError(
-                f"Document '{e.document_id}' not found."
-            ) from e
+            raise ToolError(f"Document '{e.document_id}' not found.") from e
         except EmbeddingError as e:
             raise ToolError(f"Embedding error: {e}. Is Ollama running?") from e
         except RagnestError as e:

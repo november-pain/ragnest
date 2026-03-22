@@ -63,9 +63,7 @@ def register_batch_tools(
         try:
             batches = kb_service.list_batches(kb_name)
         except KBNotFoundError as e:
-            raise ToolError(
-                f"KB '{e.kb_name}' not found. Use list_kbs() to see available."
-            ) from e
+            raise ToolError(f"KB '{e.kb_name}' not found. Use list_kbs() to see available.") from e
         except RagnestError as e:
             raise ToolError(str(e)) from e
         else:
@@ -121,9 +119,7 @@ def register_batch_tools(
         try:
             queued = worker_service.scan_watch_paths(kb_name)
         except KBNotFoundError as e:
-            raise ToolError(
-                f"KB '{e.kb_name}' not found. Use list_kbs() to see available."
-            ) from e
+            raise ToolError(f"KB '{e.kb_name}' not found. Use list_kbs() to see available.") from e
         except RagnestError as e:
             raise ToolError(str(e)) from e
         else:
