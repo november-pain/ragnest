@@ -1,0 +1,21 @@
+database:
+  backend: postgres
+  host: localhost
+  port: 5432
+  name: ragnest_test
+  user: postgres
+  password: testpass
+
+ollama:
+  base_url: http://localhost:11434
+
+defaults:
+  chunk_size: 500
+  chunk_overlap: 100
+  separator: "\n\n"
+
+knowledge_bases:
+  test_kb:
+    description: "Test knowledge base"
+    model: bge-m3
+    dimensions: 1024

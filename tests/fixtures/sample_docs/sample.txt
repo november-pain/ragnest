@@ -1,0 +1,6 @@
+This is a sample text document for testing purposes.
+
+It contains multiple paragraphs separated by blank lines.
+
+The file reader should be able to read this file correctly
+and return the full text content as a single string.
