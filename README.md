@@ -7,70 +7,63 @@
 
 Multi-knowledge-base RAG system with [MCP](https://modelcontextprotocol.io/) integration for [Claude Code](https://docs.anthropic.com/en/docs/claude-code).
 
-Create multiple knowledge bases, each with its own embedding model, chunk settings, and vector backend. Search them from Claude Code via 27 MCP tools.
+Create multiple knowledge bases, each with its own embedding model, chunk settings, and vector backend. Search them from Claude Code via 29 MCP tools.
+
+## Quick Start
+
+### 1. Add to Claude Code
+
+```bash
+claude mcp add ragnest -- uvx ragnest
+```
+
+On first run, Ragnest creates `~/.ragnest/config.yaml` and `~/.ragnest/.env` with defaults. The MCP server starts immediately — no manual config needed.
+
+### 2. Check setup
+
+Ask Claude: *"check ragnest setup status"* — it will call `ragnest_setup_status()` and tell you what's missing.
+
+### 3. Prerequisites
+
+You'll need these before creating knowledge bases:
+
+- **Ollama** for embeddings:
+  ```bash
+  brew install ollama && brew services start ollama
+  ollama pull bge-m3
+  ```
+
+- **PostgreSQL 15+** with [pgvector](https://github.com/pgvector/pgvector) for vector storage:
+  ```bash
+  pip install ragnest  # if not using uvx
+  cd $(pip show ragnest | grep Location | cut -d' ' -f2)/../..
+  docker compose up -d
+  ```
+  Or use any PostgreSQL 15+ instance with pgvector installed.
+
+### 4. Configure
+
+Edit `~/.ragnest/config.yaml` with your database settings:
+```yaml
+database:
+  host: localhost
+  port: 5432
+  name: ragnest
+```
+
+Edit `~/.ragnest/.env` with credentials:
+```bash
+RAGNEST_DATABASE__USER=ragnest
+RAGNEST_DATABASE__PASSWORD=yourpassword
+```
+
+Claude can help you with this — just ask.
 
 ## Installation
 
 ```bash
 pip install ragnest
 ```
-
-### Prerequisites
-
-- **Python 3.12+**
-- **PostgreSQL** with [pgvector](https://github.com/pgvector/pgvector) extension
-- **Ollama** for local embeddings
-
-## Quick Start
-
-### 1. Start PostgreSQL with pgvector
-
-```bash
-# Using the included Docker Compose
-git clone https://github.com/november-pain/ragnest.git
-cd ragnest
-docker compose up -d
-```
-
-Or use any PostgreSQL 15+ instance with pgvector installed.
-
-### 2. Configure
-
-```bash
-cp config.example.yaml config.yaml
-```
-
-Edit `config.yaml`:
-```yaml
-database:
-  host: localhost
-  port: 5433
-  name: ragnest
-
-ollama:
-  base_url: http://localhost:11434
-```
-
-Create `.env` with database credentials:
-```bash
-RAGNEST_DATABASE__USER=ragnest
-RAGNEST_DATABASE__PASSWORD=yourpassword
-```
-
-### 3. Install Ollama and pull an embedding model
-
-```bash
-brew install ollama && brew services start ollama
-ollama pull bge-m3
-```
-
-### 4. Add to Claude Code
-
-```bash
-claude mcp add ragnest -- uvx ragnest
-```
-
-Database and schema are auto-initialized when the MCP server starts.
 
 ## Usage
 
@@ -102,7 +95,7 @@ Returns ranked results with source filenames, scores, and text chunks.
 ## Architecture
 
 ```
-Claude Code ──MCP──▶ MCP Server (27 tools)
+Claude Code ──MCP──▶ MCP Server (29 tools)
                          │
               ┌──────────┼──────────┐
               ▼                     ▼
@@ -132,11 +125,13 @@ Claude Code ──MCP──▶ MCP Server (27 tools)
 | **Ingestion** | `add_file`, `add_directory`, `add_text` |
 | **Batches** | `batch_status`, `list_batches`, `undo_batch`, `worker_status`, `trigger_scan` |
 | **Documents** | `list_documents`, `delete_document` |
-| **System** | `db_status`, `list_models`, `system_info` |
+| **System** | `ragnest_setup_status`, `ragnest_help`, `db_status`, `list_models`, `system_info` |
 | **Export** | `export_knowledge_base` |
 
 ## Features
 
+- **Zero-config startup** — MCP server starts immediately, scaffolds config on first run
+- **Setup wizard** — `ragnest_setup_status` checks all prerequisites and guides through fixes
 - **Multiple knowledge bases** — each with its own embedding model, dimensions, and chunk settings
 - **Per-KB backend routing** — route different KBs to different PostgreSQL databases
 - **External KB support** — connect to remote vector stores in read-only or read-write mode
@@ -145,32 +140,22 @@ Claude Code ──MCP──▶ MCP Server (27 tools)
 - **Resilient worker** — per-file commits, SIGINT/SIGTERM handling, resume on restart
 - **Content deduplication** — SHA-256 hashing skips unchanged files
 - **Cross-KB search** — search all knowledge bases in one call
+- **Remote Ollama** — configure any Ollama-compatible API endpoint
 - **Export** — Parquet or JSON with model metadata sidecar
 
 ## Configuration
 
-### Basic
+Config is auto-created at `~/.ragnest/config.yaml` on first run. All settings can also be overridden via environment variables with `RAGNEST_` prefix:
 
-```yaml
-# config.yaml
-database:
-  host: localhost
-  port: 5433
-  name: ragnest
-
-ollama:
-  base_url: http://localhost:11434
-
-defaults:
-  chunk_size: 1000
-  chunk_overlap: 200
-```
-
-```bash
-# .env
-RAGNEST_DATABASE__USER=ragnest
-RAGNEST_DATABASE__PASSWORD=yourpassword
-```
+| Setting | Env var |
+|---------|---------|
+| Database host | `RAGNEST_DATABASE__HOST` |
+| Database port | `RAGNEST_DATABASE__PORT` |
+| Database name | `RAGNEST_DATABASE__NAME` |
+| Database user | `RAGNEST_DATABASE__USER` |
+| Database password | `RAGNEST_DATABASE__PASSWORD` |
+| Ollama URL | `RAGNEST_OLLAMA__BASE_URL` |
+| Config file | `RAGNEST_CONFIG` |
 
 ### Multiple backends
 
@@ -178,7 +163,7 @@ RAGNEST_DATABASE__PASSWORD=yourpassword
 databases:
   local:
     host: localhost
-    port: 5433
+    port: 5432
     name: ragnest
   cloud:
     host: xyz.supabase.co
@@ -197,8 +182,6 @@ ragnest-worker --retry                # Retry failed files
 ragnest-worker --scan --dry-run       # Preview what would be queued
 ```
 
-Deploy files for [launchd](deploy/com.raghub.worker.plist) and [systemd](deploy/rag-hub-worker.service) are included for scheduled runs.
-
 ## Development
 
 ```bash
@@ -208,27 +191,7 @@ pip install -e ".[dev]"
 
 make lint             # ruff check + format
 make typecheck        # mypy + basedpyright (strict)
-make test             # pytest (113 tests)
-```
-
-## Project Structure
-
-```
-src/ragnest/
-├── app.py                  # Application container + wiring
-├── config.py               # Pydantic Settings + YAML
-├── exceptions.py           # Exception hierarchy
-├── models/                 # Pydantic domain + DB row models
-├── db/
-│   ├── backends/           # PostgreSQL, SQLite implementations
-│   ├── repositories/       # 6 data access repositories
-│   ├── schema.py           # Vector DDL + index management
-│   └── sqlite_schema.py    # Local state DDL
-├── services/               # Business logic (7 services)
-├── mcp/
-│   ├── server.py           # FastMCP app factory
-│   └── tools/              # 8 tool modules (27 tools)
-└── cli/                    # Worker + DB setup entrypoints
+make test             # pytest
 ```
 
 ## License
