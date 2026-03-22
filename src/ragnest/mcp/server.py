@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import logging
+from pathlib import Path
 from typing import TYPE_CHECKING
 
 from fastmcp import FastMCP
@@ -26,6 +27,10 @@ logger = logging.getLogger(__name__)
 _INSTRUCTIONS = """\
 You have access to Ragnest, a multi-knowledge-base RAG system.
 
+## First use
+- If anything fails or seems unconfigured, call ragnest_setup_status() first.
+- It checks config file, database, Ollama, and KBs — tells the user exactly what to fix.
+
 ## Workflow
 - Run list_kbs() early to see available knowledge bases.
 - Search before answering — use search_kb or search_all_kbs.
@@ -48,6 +53,46 @@ You have access to Ragnest, a multi-knowledge-base RAG system.
 - PostgreSQL with pgvector required for vector storage."""
 
 
+_DEFAULT_CONFIG = """\
+# Ragnest configuration — edit to match your setup.
+# Docs: https://github.com/november-pain/ragnest
+
+database:
+  host: localhost
+  port: 5432
+  name: ragnest
+
+ollama:
+  base_url: http://localhost:11434
+
+defaults:
+  chunk_size: 1000
+  chunk_overlap: 200
+"""
+
+_DEFAULT_ENV = """\
+# Database credentials — fill in your values.
+RAGNEST_DATABASE__USER=ragnest
+RAGNEST_DATABASE__PASSWORD=changeme
+"""
+
+
+def _ensure_config_dir() -> None:
+    """Create ~/.ragnest/ with default config and .env on first run."""
+    config_dir = Path.home() / ".ragnest"
+    config_dir.mkdir(exist_ok=True)
+
+    config_file = config_dir / "config.yaml"
+    if not config_file.exists():
+        config_file.write_text(_DEFAULT_CONFIG)
+        logger.info("Created default config: %s", config_file)
+
+    env_file = config_dir / ".env"
+    if not env_file.exists():
+        env_file.write_text(_DEFAULT_ENV)
+        logger.info("Created default .env: %s", env_file)
+
+
 def create_mcp_server(settings: AppSettings | None = None) -> FastMCP:
     """Create and configure the Ragnest MCP server with all tools registered.
 
@@ -58,6 +103,7 @@ def create_mcp_server(settings: AppSettings | None = None) -> FastMCP:
         A fully configured ``FastMCP`` instance ready to run.
     """
     if settings is None:
+        _ensure_config_dir()
         settings = load_settings()
 
     app = Application(settings)

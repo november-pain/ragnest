@@ -13,7 +13,7 @@ from ragnest.db.repositories.queue import QueueRepository
 from ragnest.db.repositories.watch_path import WatchPathRepository
 from ragnest.db.schema import create_database_if_not_exists, init_vector_schema
 from ragnest.db.sqlite_schema import init_sqlite_schema
-from ragnest.exceptions import ConfigError
+from ragnest.exceptions import ConfigError, DatabaseError
 from ragnest.services.embedding_service import EmbeddingService
 from ragnest.services.export_service import ExportService
 from ragnest.services.ingest_service import IngestService
@@ -32,43 +32,68 @@ logger = logging.getLogger(__name__)
 class BackendRegistry:
     """Manages multiple named vector database backends.
 
-    Each backend is initialized with its own connection pool and vector schema.
-    Services use the registry to route chunk operations to the correct backend.
+    Backends are initialized lazily on first access so the MCP server
+    can start even when PostgreSQL is not yet configured or reachable.
     """
 
     def __init__(self, configs: dict[str, DBSettings]) -> None:
+        self._configs = dict(configs)
         self._backends: dict[str, DatabaseBackend] = {}
-        for name, settings in configs.items():
+
+    def _init_backend(self, name: str) -> DatabaseBackend:
+        """Initialize a single backend on first access."""
+        settings = self._configs[name]
+        try:
             create_database_if_not_exists(settings)
             backend = create_backend(settings)
             init_vector_schema(backend)
-            self._backends[name] = backend
-            logger.info("Initialized vector backend '%s'", name)
+        except Exception as exc:
+            msg = (
+                f"Cannot connect to database '{name}' "
+                f"at {settings.host}:{settings.port}/{settings.name}. "
+                "PostgreSQL 15+ with pgvector extension is required. "
+                "Guide the user through setup: "
+                "1) Install Docker for local PostgreSQL. "
+                "2) Create ~/.ragnest/config.yaml with db settings. "
+                "3) Create ~/.ragnest/.env with credentials. "
+                "4) Run: docker compose up -d. "
+                f"Call ragnest_help() for details. Error: {exc}"
+            )
+            raise DatabaseError(msg) from exc
+        self._backends[name] = backend
+        logger.info("Initialized vector backend '%s'", name)
+        return backend
 
     def get(self, name: str = "default") -> DatabaseBackend:
-        """Get a backend by name, raising ``ConfigError`` if not found."""
-        if name not in self._backends:
-            available = list(self._backends)
+        """Get a backend by name, initializing lazily if needed."""
+        if name in self._backends:
+            return self._backends[name]
+        if name not in self._configs:
+            available = list(self._configs)
             msg = f"Backend '{name}' not configured. Available: {available}"
             raise ConfigError(msg)
-        return self._backends[name]
+        return self._init_backend(name)
 
     @property
     def default(self) -> DatabaseBackend:
-        """Return the first configured backend."""
-        return next(iter(self._backends.values()))
+        """Return the first configured backend, initializing if needed."""
+        name = next(iter(self._configs))
+        return self.get(name)
 
     @property
     def names(self) -> list[str]:
         """List all configured backend names."""
-        return list(self._backends)
+        return list(self._configs)
 
     def all(self) -> dict[str, DatabaseBackend]:
-        """Return a copy of all backends."""
+        """Return all backends, initializing any that haven't been yet."""
+        for name in self._configs:
+            if name not in self._backends:
+                self._init_backend(name)
         return dict(self._backends)
 
     def close(self) -> None:
-        """Close all backend connection pools."""
+        """Close all initialized backend connection pools."""
         for name, backend in self._backends.items():
             backend.close()
             logger.info("Closed vector backend '%s'", name)
@@ -96,11 +121,8 @@ class Application:
         self.state_backend: SQLiteBackend = create_state_backend(settings.state)
         init_sqlite_schema(self.state_backend)
 
-        # Vector backends (per-KB routing)
+        # Vector backends (lazy init — connects on first tool call, not on startup)
         self.registry = BackendRegistry(settings.databases)
-
-        # Backward-compatible single backend reference
-        self.backend: DatabaseBackend = self.registry.default
 
         # State repositories (SQLite)
         self.kb_repo = KBRepository(self.state_backend)

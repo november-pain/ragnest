@@ -33,7 +33,7 @@ _HELP_TEXT = """\
 ```yaml
 database:
   host: localhost       # PostgreSQL host
-  port: 5433            # PostgreSQL port
+  port: 5432            # PostgreSQL port (default)
   name: ragnest         # Database name
 
 ollama:
@@ -112,6 +112,16 @@ ragnest-worker --scan --dry-run       # Preview what would be queued
 
 def register_system_tools(mcp: FastMCP, system_service: SystemService) -> None:
     """Register system information MCP tools."""
+
+    @mcp.tool
+    def ragnest_setup_status() -> str:
+        """Check setup prerequisites and show what's configured vs missing.
+
+        Returns a checklist: config file, secrets, PostgreSQL connection,
+        Ollama status, and knowledge bases. Call this first when helping
+        a new user get started, or when something isn't working.
+        """
+        return system_service.setup_status()
 
     @mcp.tool
     def ragnest_help() -> str:

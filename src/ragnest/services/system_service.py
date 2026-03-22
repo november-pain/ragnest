@@ -6,6 +6,8 @@ Reports status of both the SQLite state backend and vector backends.
 from __future__ import annotations
 
 import logging
+from importlib.metadata import version
+from pathlib import Path
 from typing import TYPE_CHECKING
 
 from ragnest.models.domain import DBStatus, SystemInfo
@@ -19,7 +21,7 @@ if TYPE_CHECKING:
 
 logger = logging.getLogger(__name__)
 
-_VERSION = "0.1.0"
+_VERSION = version("ragnest")
 
 
 class SystemService:
@@ -78,10 +80,10 @@ class SystemService:
 
     def _vector_backend_status(self, name: str) -> DBStatus:
         """Check connectivity and stats for a single vector backend."""
-        backend = self._registry.get(name)
         db_settings = self._settings.databases.get(name)
         backend_type = db_settings.backend if db_settings else "unknown"
         try:
+            backend = self._registry.get(name)
             with backend.cursor() as cur:
                 cur.execute("SELECT COUNT(*) FROM chunks")
                 row = cur.fetchone()
@@ -139,6 +141,102 @@ class SystemService:
     def list_models(self) -> list[str]:
         """List available Ollama embedding models."""
         return self._embedding_service.list_models()
+
+    def _check_config(self) -> tuple[str, Path | None]:
+        """Check config file presence."""
+        candidates = [
+            Path.cwd() / "config.yaml",
+            Path.home() / ".ragnest" / "config.yaml",
+        ]
+        found = next((p for p in candidates if p.exists()), None)
+        if found:
+            return f"[x] Config file: {found}", found
+        return (
+            "[ ] Config file: not found. "
+            "Create ~/.ragnest/config.yaml with database settings. "
+            "Call ragnest_help() for the template."
+        ), None
+
+    def _check_secrets(self, config_path: Path | None) -> str:
+        """Check secrets file presence."""
+        env_dir = config_path.parent if config_path else Path.home() / ".ragnest"
+        env_path = env_dir / ".env"
+        if env_path.exists():
+            return f"[x] Secrets file: {env_path}"
+        return (
+            f"[ ] Secrets file: {env_path} not found. "
+            "Create it with RAGNEST_DATABASE__USER and "
+            "RAGNEST_DATABASE__PASSWORD."
+        )
+
+    def _check_postgres(self) -> tuple[list[str], bool]:
+        """Check PostgreSQL connectivity for each backend."""
+        lines: list[str] = []
+        db_ok = False
+        for name in self._registry.names:
+            db_settings = self._settings.databases.get(name)
+            try:
+                backend = self._registry.get(name)
+                with backend.cursor() as cur:
+                    cur.execute("SELECT 1")
+                db_ok = True
+                host = f"{db_settings.host}:{db_settings.port}" if db_settings else "unknown"
+                lines.append(f"[x] PostgreSQL ({name}): connected at {host}")
+            except Exception:
+                if db_settings:
+                    lines.append(
+                        f"[ ] PostgreSQL ({name}): cannot connect to "
+                        f"{db_settings.host}:{db_settings.port}/{db_settings.name}. "
+                        "Install Docker and run: docker compose up -d"
+                    )
+                else:
+                    lines.append(f"[ ] PostgreSQL ({name}): not configured.")
+        return lines, db_ok
+
+    def _check_ollama(self) -> tuple[str, bool]:
+        """Check Ollama connectivity and available models."""
+        models = self._embedding_service.list_models()
+        if models:
+            return (f"[x] Ollama: running, {len(models)} model(s) ({', '.join(models[:3])})"), True
+        return (
+            "[ ] Ollama: not reachable or no models installed. "
+            "Install: brew install ollama && brew services start ollama. "
+            "Then pull a model: ollama pull bge-m3"
+        ), False
+
+    def setup_status(self) -> str:
+        """Check all prerequisites and return a setup checklist."""
+        lines: list[str] = ["# Ragnest Setup Status\n"]
+
+        config_line, config_path = self._check_config()
+        lines.append(config_line)
+        lines.append(self._check_secrets(config_path))
+
+        pg_lines, db_ok = self._check_postgres()
+        lines.extend(pg_lines)
+
+        ollama_line, has_models = self._check_ollama()
+        lines.append(ollama_line)
+
+        state = self._state_status()
+        if state.total_kbs > 0:
+            lines.append(f"[x] Knowledge bases: {state.total_kbs} configured")
+        elif db_ok and has_models:
+            lines.append(
+                "[ ] Knowledge bases: none yet. Ready to create — use create_kb() or init_kb()."
+            )
+        else:
+            lines.append("[ ] Knowledge bases: none yet. Fix items above first.")
+
+        checks = [ln.startswith("[x]") for ln in lines if ln.startswith("[")]
+        passed = sum(checks)
+        total = len(checks)
+        if passed == total:
+            lines.append(f"\nAll {total} checks passed. Ragnest is ready.")
+        else:
+            lines.append(f"\n{passed}/{total} checks passed. Fix items marked [ ] above.")
+
+        return "\n".join(lines)
 
     def system_info(self) -> SystemInfo:
         """Gather overall system information."""
