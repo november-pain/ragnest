@@ -1,11 +1,11 @@
-# RAG Hub Configuration
+# Ragnest Configuration
+# Copy to config.yaml and adjust for your setup.
+# Database credentials go in .env (not here).
 
 database:
   host: localhost
-  port: 5432
-  name: rag_hub
-  user: postgres
-  password: postgres  # change this
+  port: 5433
+  name: ragnest
 
 ollama:
   base_url: http://localhost:11434
@@ -15,30 +15,3 @@ defaults:
   chunk_size: 1000
   chunk_overlap: 200
   separator: "\n\n"
-
-# Knowledge base definitions
-# Each KB has its own embedding model and optional settings
-knowledge_bases:
-  legal_ua:
-    description: "Ukrainian legal documents"
-    model: bge-m3
-    dimensions: 1024
-    chunk_size: 1500
-    chunk_overlap: 300
-
-  codebase:
-    description: "Source code and technical docs"
-    model: gte-qwen2:7b
-    dimensions: 3584
-    chunk_size: 800
-    chunk_overlap: 100
-
-  research:
-    description: "Research papers and notes"
-    model: bge-m3
-    dimensions: 1024
-
-  general:
-    description: "General knowledge base"
-    model: nomic-embed-text
-    dimensions: 768
